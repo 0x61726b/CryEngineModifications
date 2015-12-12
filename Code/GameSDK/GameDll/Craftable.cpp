@@ -26,24 +26,229 @@ History:
 
 #include "StdAfx.h"
 #include "Craftable.h"
+#include "Game.h"
+#include "Actor.h"
 
+#include "IEntityProxy.h"
 
-void CCraftable::PickUp(EntityId pickerId, bool sound, bool select/* =true */, bool keepHistory/* =true */, const char *setup)
+void CCraftable::SProperties::InitFromScript(const IEntity& entity)
 {
+	IScriptTable* pScriptTable = entity.GetScriptTable();
+
+	if(pScriptTable != NULL)
+	{
+		SmartScriptTable propertiesTable;
+		if (pScriptTable->GetValue("Properties", propertiesTable))
+		{
+			propertiesTable->GetValue("object_Model",m_Model);
+			propertiesTable->GetValue("fScale",m_Scale);
+		}
+	}
 
 }
-
+//---------------------------------------------------------------------
+namespace Craftable
+{
+	void RegisterEvents( IGameObjectExtension& goExt, IGameObject& gameObject )
+	{
+		const int eventID = eGFE_OnCollision;
+		gameObject.UnRegisterExtForEvents( &goExt, NULL, 0 );
+		gameObject.RegisterExtForEvents( &goExt, &eventID, 1 );
+	}
+}
 CCraftable::CCraftable()
 {
 
 }
+//---------------------------------------------------------------------
 CCraftable::~CCraftable()
 {
 
 }
+//---------------------------------------------------------------------
+void CCraftable::Spawn()
+{
+	GetEntity()->SetScale(Vec3(m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale));
+	GetEntity()->LoadGeometry(0, m_ScriptsProps.m_Model); 
 
 
 
+	//Create trigger area
+	IEntityTriggerProxy *pTriggerProxy = (IEntityTriggerProxy*)(GetEntity()->GetProxy(ENTITY_PROXY_TRIGGER));
+
+	if(!pTriggerProxy)
+	{
+		GetEntity()->CreateProxy(ENTITY_PROXY_TRIGGER);
+		pTriggerProxy = (IEntityTriggerProxy*)GetEntity()->GetProxy(ENTITY_PROXY_TRIGGER);
+	}
+	if(pTriggerProxy)
+	{
+		AABB boundingBox;
+		GetEntity()->GetLocalBounds(boundingBox);
+		pTriggerProxy->SetTriggerBounds(boundingBox);
+	}
+	else
+	{
+		gEnv->pLog->Log("%s: Warning: Trigger Area Has Bad Params", GetEntity()->GetName());
+	}
+
+
+
+
+}
+//---------------------------------------------------------------------
+bool CCraftable::Init( IGameObject * pGameObject )
+{
+	SetGameObject(pGameObject);
+	Craftable::RegisterEvents(*this,*pGameObject);
+	GetGameObject()->EnablePhysicsEvent(true, eEPE_OnCollisionLogged);
+	return true;
+}
+//---------------------------------------------------------------------
+void CCraftable::PostInit(IGameObject *pGameObject)
+{
+	Reset();
+
+	Spawn();
+}
+//--------------------------------------------------------------------
+void CCraftable::HandleEvent( const SGameObjectEvent& e)
+{
+
+}
+//--------------------------------------------------------------------
+void CCraftable::ProcessEvent( SEntityEvent &event)
+{
+	switch(event.event)
+	{
+	case ENTITY_EVENT_ENTERAREA:
+		{
+			IEntity * pEntity = gEnv->pEntitySystem->GetEntity((EntityId)event.nParam[0]);
+			IActor* pActor = g_pGame->GetIGameFramework()->GetIActorSystem()->GetActor((EntityId)event.nParam[0]);
+			EntityId PlayerId =  gEnv->pGame->GetIGameFramework()->GetClientActorId();
+			IActor* pPlayerAc = g_pGame->GetIGameFramework()->GetIActorSystem()->GetActor(PlayerId);
+
+
+			if(pActor == pPlayerAc)
+			{
+				CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+
+				if(!pPlayer)
+					return;
+				CCraftableBush* bush = static_cast<CCraftableBush*>(this);
+				CCraftableFlintstone* flintstone = static_cast<CCraftableFlintstone*>(this);
+
+				if(bush)
+				{
+					pPlayer->GetCraftSystem()->AddItem(bush);
+				} else if(flintstone)
+				{
+					pPlayer->GetCraftSystem()->AddItem(flintstone);
+				}
+
+			}
+
+			break;
+		}
+
+	case ENTITY_EVENT_LEAVEAREA:
+		{
+			IEntity * pEntity = gEnv->pEntitySystem->GetEntity((EntityId)event.nParam[0]);
+			IActor* pActor = g_pGame->GetIGameFramework()->GetIActorSystem()->GetActor((EntityId)event.nParam[0]);
+			EntityId PlayerId =  gEnv->pGame->GetIGameFramework()->GetClientActorId();
+			IActor* pPlayerAc = g_pGame->GetIGameFramework()->GetIActorSystem()->GetActor(PlayerId);
+			if(pActor == pPlayerAc)
+			{
+				gEnv->pLog->Log("%s: Player Left the area", GetEntity()->GetName());         
+			}
+
+			if(pActor != pPlayerAc)
+			{
+				gEnv->pLog->Log("%s: Something left the area", GetEntity()->GetName());
+			}
+			break;
+		}
+	default:
+		break;
+	}
+	if (event.event == ENTITY_EVENT_XFORM)
+	{
+		Reset();
+		/*Spawn();*/
+	}
+	if(event.event == ENTITY_EVENT_RESET)
+	{
+		Reset();
+	}
+	else if (gEnv->IsEditor() && (event.event == ENTITY_EVENT_RESET))
+	{
+		const bool leavingGameMode = (event.nParam[0] == 0);
+		if (leavingGameMode)
+		{
+			Reset();
+		}
+	}
+}
+//--------------------------------------------------------------------
+void CCraftable::Update( SEntityUpdateContext& ctx, int updateSlot )
+{
+
+}
+//--------------------------------------------------------------------
+bool CCraftable::ReloadExtension( IGameObject * pGameObject, const SEntitySpawnParams &params )
+{
+	ResetGameObject();
+
+	Craftable::RegisterEvents(*this,*pGameObject);
+
+	return true;
+}
+//--------------------------------------------------------------------
+void CCraftable::PostReloadExtension( IGameObject * pGameObject, const SEntitySpawnParams &params )
+{
+	Craftable::RegisterEvents(*this,*pGameObject);
+}
+//--------------------------------------------------------------------
+bool CCraftable::GetEntityPoolSignature( TSerialize signature )
+{
+	return true;
+}
+//--------------------------------------------------------------------
+void CCraftable::Reset()
+{
+	m_ScriptsProps.InitFromScript(*GetEntity());
+
+	GetEntity()->SetScale(Vec3(m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale)); //for some reason..
+}
+//---------------------------------------------------------------------//
+void CCraftable::FullSerialize( TSerialize ser )
+{
+}
+//---------------------------------------------------------------------//
+void CCraftable::PostSerialize()
+{
+}
+//---------------------------------------------------------------------//
+
+CCraftableBush::CCraftableBush()
+	: ICraftable(ECraftableItems::Bush)
+{
+
+}
+CCraftableBush::~CCraftableBush()
+{
+
+}
+
+CCraftableFlintstone::CCraftableFlintstone()
+	: ICraftable(ECraftableItems::Flintstone)
+{
+
+}
+CCraftableFlintstone::~CCraftableFlintstone()
+{
+
+}
 
 
 //-------------------------------------------------------------------------
