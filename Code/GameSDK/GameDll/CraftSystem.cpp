@@ -71,7 +71,15 @@ namespace Products
 
 CraftSystem::CraftSystem()
 {
+	if ( gEnv->pFlashUI )
+	{
+		IUIElement* pHUD = gEnv->pFlashUI->GetUIElement( "ArkenUI" );
+		if ( pHUD )
+		{
+			pHUD->AddEventListener( this, "ArkenUI" );
 
+		}
+	}
 }
 CraftSystem::~CraftSystem()
 {
@@ -80,7 +88,20 @@ CraftSystem::~CraftSystem()
 
 void CraftSystem::AddItem(ICraftable* item)
 {
-	m_vInventory.push_back(item);
+	/*
+	Why creating a new instance?
+	Because when the player picks the item,its instance will be deleted via entity system and the pointer will point to NULL
+	which will lead to crash when trying to access it
+	*/
+	ICraftable* copy = new ICraftable(item->GetType());
+
+	m_vInventory.push_back(copy);
+
+	for(int i=0; i < m_vListeners.size(); ++i)
+		m_vListeners.at(i)->OnPickup(copy);
+
+	//Update UI
+	UpdateUI();
 }
 
 void CraftSystem::RemoveItem(ICraftable* item)
@@ -145,4 +166,78 @@ int CraftSystem::GetCraftableCount(ECraftableItems c)
 			count++;
 	}
 	return count;
+}
+
+void CraftSystem::AddListener(CraftSystemListener* listener)
+{
+	std::vector<CraftSystemListener*>::iterator It = std::find(m_vListeners.begin(),m_vListeners.end(),listener);
+
+	if(It == m_vListeners.end())
+		m_vListeners.push_back(listener);
+}
+
+void CraftSystem::RemoveListener(CraftSystemListener* listener)
+{
+	std::vector<CraftSystemListener*>::iterator It = std::find(m_vListeners.begin(),m_vListeners.end(),listener);
+
+	if(It != m_vListeners.end())
+	{
+		m_vListeners.erase(It);
+	}
+}
+
+void CraftSystem::OnUIEvent( IUIElement* pSender, const SUIEventDesc& event, const SUIArguments& args )
+{
+	if ( event.sDisplayName == "OnFireButton" )
+	{
+
+	}
+	else
+	{
+		// event is not "OnButton1" event
+	}
+}
+
+void CraftSystem::Reset()
+{
+	m_vListeners.clear();
+	m_vInventory.clear();
+}
+
+void CraftSystem::UpdateUI()
+{
+	if( gEnv->pFlashUI )
+	{
+		//Basic UI of displaying quantity of items. See ArkenUI.xml
+		IUIElement* pArkenUI = gEnv->pFlashUI->GetUIElement( "ArkenUI" );
+
+		if( pArkenUI )
+		{
+			for(int i=0; i < m_vInventory.size(); ++i)
+			{
+				ICraftable* item = m_vInventory.at(i);
+
+				SUIArguments args;
+				args.AddArgument( GetCraftableCount(item->GetType()) );
+
+				TUIData res;
+
+				switch(item->GetType())
+				{
+				case ECraftableItems::Bush:
+					{
+						pArkenUI->CallFunction( "SetBushText",args,&res );
+					}
+					break;
+				case ECraftableItems::Flintstone:
+					{
+						pArkenUI->CallFunction( "SetFlintText",args,&res );
+					}
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
 }

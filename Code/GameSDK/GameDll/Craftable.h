@@ -94,7 +94,7 @@ public:
 	~CCraftableBush();
 
 	//ICraftable
-
+	
 	//~ICraftable
 };
 
@@ -105,7 +105,7 @@ public:
 	~CCraftableFlintstone();
 
 	//ICraftable
-
+	
 	//~ICraftable
 };
 //------------------------------------------------------------------------

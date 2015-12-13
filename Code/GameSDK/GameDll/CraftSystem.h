@@ -28,6 +28,7 @@ History:
 //-------------------------------------------------------------------------
 
 #include <IGameObject.h>
+#include <IFlashUI.h>
 
 
 enum ECraftableItems
@@ -83,14 +84,28 @@ namespace Products
 		void Spawn();
 	};
 }
-class CraftSystem
+class CraftSystemListener
+{
+public:
+	virtual void OnPickup(ICraftable* picked) = 0;
+};
+class CraftSystem : public IUIElementEventListener
 {
 public:
 	CraftSystem();
 	~CraftSystem();
 
+	void OnUIEvent( IUIElement* pSender, const SUIEventDesc& event, const SUIArguments& args );
+
+	void AddListener(CraftSystemListener* listener);
+	void RemoveListener(CraftSystemListener* listener);
+
 	void AddItem(ICraftable*);
 	void RemoveItem(ICraftable*);
+
+	void Reset();
+
+	void UpdateUI();
 
 	void TryCraft(EProducts product);
 	bool HasRequiredItems(IProduct*);
@@ -98,6 +113,7 @@ public:
 	int GetCraftableCount(ECraftableItems c);
 
 	std::vector<ICraftable*> m_vInventory;
+	std::vector<CraftSystemListener*> m_vListeners;
 };
 
 

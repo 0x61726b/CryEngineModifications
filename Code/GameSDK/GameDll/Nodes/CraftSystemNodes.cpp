@@ -130,5 +130,125 @@ public:
 	int m_FlintstoneCount;
 };
 
+
+
+
+
+
+class CFlowNode_CraftSystemPickup : public CFlowBaseNode<eNCT_Instanced>,public CraftSystemListener
+{
+	enum EInputPorts
+	{
+		eINP_Enable = 0,
+		eINP_Disable
+	};
+
+	enum EOutputPorts
+	{
+		eOUT_onPickup = 0,
+	};
+
+public:
+	CFlowNode_CraftSystemPickup( SActivationInfo * pActInfo )
+	{
+
+	}
+
+	virtual void GetMemoryUsage(ICrySizer * s) const
+	{
+		s->Add(*this);
+	}
+
+	CFlowNode_CraftSystemPickup::~CFlowNode_CraftSystemPickup() 
+	{
+		CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+
+		if(!pPlayer)
+			return;
+
+		CraftSystem* crafting = pPlayer->GetCraftSystem();
+
+		if(!crafting)
+			return;
+
+		crafting->RemoveListener(this);
+	}
+
+
+	virtual void GetConfiguration( SFlowNodeConfig &config )
+	{
+		static const SInputPortConfig inp_config[] = {
+			InputPortConfig_Void ("Enable", _HELP("Enables the craft system pickup event listener")),
+			{0}
+		};
+		static const SOutputPortConfig out_config[] = {
+			OutputPortConfig_Void("OnPickup"),
+			{0}
+		};
+
+		config.sDescription = _HELP( "Returns the inventory" );
+		config.pInputPorts = inp_config;
+		config.pOutputPorts = out_config;
+		config.SetCategory(EFLN_APPROVED);
+	}
+
+
+	virtual IFlowNodePtr Clone(SActivationInfo* pActInfo) { return new CFlowNode_CraftSystemPickup(pActInfo); }
+
+
+	virtual void ProcessEvent( EFlowEvent event, SActivationInfo *pActInfo )
+	{
+		switch (event)
+		{
+		case eFE_Initialize:
+			{
+				m_actInfo = *pActInfo;
+				break;
+			}
+		case eFE_Activate:
+			{
+				if (IsPortActive( pActInfo, eINP_Enable ))
+				{
+					CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+
+					if(!pPlayer)
+						return;
+
+					CraftSystem* crafting = pPlayer->GetCraftSystem();
+
+					if(!crafting)
+						return;
+
+					crafting->AddListener(this);
+				}
+				if (IsPortActive( pActInfo, eINP_Disable ))
+				{
+					CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+
+					if(!pPlayer)
+						return;
+
+					CraftSystem* crafting = pPlayer->GetCraftSystem();
+
+					if(!crafting)
+						return;
+
+					crafting->RemoveListener(this);
+				}
+				break;
+			}
+		}
+	}
+
+	virtual void OnPickup(ICraftable* picked)
+	{
+		ActivateOutput(&m_actInfo, eOUT_onPickup, true );
+	}
+
+	SActivationInfo m_actInfo;
+};
+
+
 REGISTER_FLOW_NODE( "Crafting:Inventory", CFlowNode_CraftSystemInventory );
+REGISTER_FLOW_NODE( "Crafting:Pickup", CFlowNode_CraftSystemPickup );
 //--------------------------------------------------------------------

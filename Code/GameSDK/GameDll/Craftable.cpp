@@ -138,14 +138,24 @@ void CCraftable::ProcessEvent( SEntityEvent &event)
 				CCraftableBush* bush = static_cast<CCraftableBush*>(this);
 				CCraftableFlintstone* flintstone = static_cast<CCraftableFlintstone*>(this);
 
+				bool collected = false;
+
 				if(bush)
 				{
 					pPlayer->GetCraftSystem()->AddItem(bush);
+					collected = true;
 				} else if(flintstone)
 				{
 					pPlayer->GetCraftSystem()->AddItem(flintstone);
+					collected = true;
 				}
 
+
+				if(collected)
+				{
+					//We're done with this entity
+					gEnv->pEntitySystem->RemoveEntity(GetEntity()->GetId());
+				}
 			}
 
 			break;
@@ -249,6 +259,8 @@ CCraftableFlintstone::~CCraftableFlintstone()
 {
 
 }
+
+
 
 
 //-------------------------------------------------------------------------

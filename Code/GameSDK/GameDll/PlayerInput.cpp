@@ -56,6 +56,7 @@ October 2010 : Jens Schöbel added move overlay
 #include "UI/UIManager.h"
 #include "UI/UIInput.h"
 
+#include "SpellSystem.h"
 CPlayerInput::CPlayerInput( CPlayer * pPlayer ) : 
 	m_pPlayer(pPlayer), 
 	m_actions(0), 
@@ -128,6 +129,8 @@ CPlayerInput::CPlayerInput( CPlayer * pPlayer ) :
 		ADD_HANDLER(use, OnActionUse);
 		ADD_HANDLER(attack1_xi, OnActionAttackRightTrigger);
 		ADD_HANDLER(attack1, OnActionAttack);
+		ADD_HANDLER(useSkill1,OnSkillOne);
+
 
 		ADD_HANDLER(special, OnActionSpecial);
 		ADD_HANDLER(weapon_change_firemode, OnActionChangeFireMode);
@@ -847,7 +850,18 @@ void CPlayerInput::PreUpdate()
 	//	m_actions &= ~ACTION_JUMP;
 	//}
 }
-
+bool CPlayerInput::OnSkillOne(EntityId entityId, const ActionId& actionId, int activationMode, float value)
+{
+	if(activationMode == eAAM_OnRelease)
+	{
+		m_pPlayer->GetSpellSystem()->OnSpellReleased((int)Spells::ESpells::BuildFireCamp);
+	}
+	else if(activationMode == eAAM_OnPress)
+	{
+		m_pPlayer->GetSpellSystem()->OnSpellPressed((int)Spells::ESpells::BuildFireCamp);
+	}
+	return false;
+}
 
 bool CPlayerInput::OnActionAttack(EntityId entityId, const ActionId& actionId, int activationMode, float value)
 {

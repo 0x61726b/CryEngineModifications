@@ -1,14 +1,14 @@
 /*************************************************************************
-  Crytek Source File.
-  Copyright (C), Crytek Studios, 2001-2004.
- -------------------------------------------------------------------------
-  $Id$
-  $DateTime$
-  Description: Implements the player.
-  
- -------------------------------------------------------------------------
-  History:
-  - 29:9:2004: Created by Filippo De Luca
+Crytek Source File.
+Copyright (C), Crytek Studios, 2001-2004.
+-------------------------------------------------------------------------
+$Id$
+$DateTime$
+Description: Implements the player.
+
+-------------------------------------------------------------------------
+History:
+- 29:9:2004: Created by Filippo De Luca
 
 *************************************************************************/
 #ifndef __PLAYER_H__
@@ -44,6 +44,9 @@
 #include "State.h"
 #include "IPlayerProfiles.h"
 #include "ICameraMode.h"
+
+#include "CraftSystem.h"
+#include "SpellSystem.h"
 
 
 struct IPlayerInput;
@@ -134,9 +137,9 @@ struct SSpectatorInfo
 		EntityId*  ptr = NULL;
 		switch (mode)
 		{
-			case CActor::eASM_Fixed:	ptr = &dataU.fixed.location; break;
-			case CActor::eASM_Follow:	ptr = &dataU.follow.spectatorTarget; break;
-			case CActor::eASM_Killer:	ptr = &dataU.killer.spectatorTarget; break;
+		case CActor::eASM_Fixed:	ptr = &dataU.fixed.location; break;
+		case CActor::eASM_Follow:	ptr = &dataU.follow.spectatorTarget; break;
+		case CActor::eASM_Killer:	ptr = &dataU.killer.spectatorTarget; break;
 		}
 		return ptr;
 	}
@@ -221,7 +224,7 @@ struct SPlayerStats : public SActorStats
 #endif
 	uint8 cinematicFlags;
 	uint8 isAnimatedSlave;	// Don't serialize. Local.
-	
+
 	CCoherentValue<uint8> followCharacterHead;
 
 	EntityId pickAndThrowEntity; // entity that is being hold in PickAndThrowMode (0 when is not in pickandthrow mode )
@@ -249,7 +252,7 @@ struct SPlayerStats : public SActorStats
 		forceSTAP = eFS_None;
 		bDisableTranslationPinning = false;
 		isInPickAndThrowMode = false;
-		
+
 		pickAndThrowEntity = 0;
 		prevPickAndThrowEntity = 0;
 
@@ -402,7 +405,7 @@ public:
 	void	Serialize(TSerialize ser, EEntityAspects aspect);
 	void	GetValues(int* outXp, int* outRank, int* outDefault, int* outStealth, int* outArmour, int* outReincarnations);
 	void  OwnClientConnected();
-	
+
 #if (USE_DEDICATED_INPUT)
 	void	SetRandomValues();
 #endif
@@ -471,7 +474,7 @@ class CPlayer :
 	friend class CIsometricInput;
 	friend class CAIInput;
 	friend class CNetPlayerInput;
-	
+
 	//ergh. Better way of doing this?
 	friend class CLocalPlayerComponent;
 
@@ -545,7 +548,7 @@ public:
 
 	static const NetworkAspectType ASPECT_PLAYERSTATS_SERVER								= eEA_GameServerA;
 	static const NetworkAspectType ASPECT_SPECTATOR													= eEA_GameServerC;
-	
+
 	static const NetworkAspectType ASPECT_INPUT_CLIENT											= eEA_Aspect31;
 	static const NetworkAspectType ASPECT_INPUT_CLIENT_AUGMENTED						= eEA_GameClientO;
 
@@ -565,7 +568,7 @@ public:
 
 	static const NetworkAspectType ASPECT_STEALTH_KILL											= eEA_GameServerE;
 	static const NetworkAspectType ASPECT_INTERACTIVE_OBJECT								= eEA_GameClientK;
-	
+
 	static const NetworkAspectType ASPECT_VEHICLEVIEWDIR_CLIENT							= eEA_GameClientL;
 
 	static const NetworkAspectType ASPECT_CURRENT_ITEM											= eEA_GameClientM;
@@ -622,7 +625,7 @@ public:
 	void OnIntroSequenceFinished(); 
 
 	bool IsWeaponUnderWater() const;
-	
+
 	virtual bool CanBreakGlass() const;
 	virtual bool MustBreakGlass() const;
 
@@ -635,7 +638,7 @@ public:
 	virtual IEntity *LinkToVehicle(EntityId vehicleId);
 	virtual IEntity *LinkToEntity(EntityId entityId, bool bKeepTransformOnDetach=true);
 	virtual void LinkToMountedWeapon(EntityId weaponId);
-	
+
 	virtual void StartInteractiveAction(EntityId entityId, int interactionIndex = 0);
 	virtual void StartInteractiveActionByName(const char* interaction, bool bUpdateVisibility, float actionSpeed = 1.0f);
 	virtual void EndInteractiveAction(EntityId entityId);
@@ -729,15 +732,15 @@ public:
 	bool IsStealthKilling() const { return m_stealthKill.IsBusy(); }
 	bool IsJumping() const;
 	bool IsOnLadder() const;
-	
-  virtual void EnableStumbling(PlayerActor::Stumble::StumbleParameters* stumbleParameters);
-  virtual void DisableStumbling();
+
+	virtual void EnableStumbling(PlayerActor::Stumble::StumbleParameters* stumbleParameters);
+	virtual void DisableStumbling();
 
 	ILINE void BlockMovementInputsForTime(float time)
 	{
 		m_stats.zeroVelocityForTime = (float)__fsel(time - m_stats.zeroVelocityForTime, time, m_stats.zeroVelocityForTime);
 	}
-	
+
 	ILINE bool GetBlockMovementInputs() const
 	{
 		return m_stats.zeroVelocityForTime > 0.f;
@@ -778,7 +781,7 @@ protected:
 	void UpdateFPAiming();
 	void UpdateFPIKTorso(float fFrameTime, IItem * pCurrentItem, const Vec3& cameraPosition);
 	void UpdatePartialCameraAnim(float timeStep);
-	
+
 	const Vec3  GetFPCameraOffset() const;
 	virtual void OnChangeTeam();
 	void OnLocalPlayerChangeTeam();
@@ -804,11 +807,11 @@ public:
 
 	struct EntityParams
 	{
-		
+
 		EntityParams()
 			: entityId(0)
 		{};
-		
+
 		EntityParams(EntityId entId)
 			: entityId(entId)
 		{}
@@ -851,12 +854,12 @@ public:
 		SStealthKillRequestParams(EntityId _victimId,	uint _animIndex) 
 			: victimId(_victimId)
 			, animIndex(_animIndex)
-			{}
+		{}
 
 		void SerializeWith(TSerialize ser)
 		{
 			ser.Value("stealthKillTarget", victimId, 'eid');
-			
+
 #ifndef _RELEASE
 			if(ser.IsWriting() && (animIndex > 3))
 			{
@@ -930,7 +933,7 @@ public:
 	DECLARE_SERVER_RMI_NOATTACH(SvOnXPChanged, SXPEvents, eNRT_ReliableOrdered);
 
 	DECLARE_CLIENT_RMI_NOATTACH(ClDelayedDetonation, EntityParams, eNRT_ReliableUnordered);
-	
+
 	DECLARE_SERVER_RMI_INDEPENDENT(SvRequestMicrowaveBeam, SMicrowaveBeamParams, eNRT_ReliableUnordered);
 	DECLARE_CLIENT_RMI_INDEPENDENT(ClDeployMicrowaveBeam, SMicrowaveBeamParams, eNRT_ReliableUnordered);
 
@@ -967,7 +970,7 @@ public:
 	void UpdateBreathing(float frameTime);
 	void UpdateStumble(float deltaTime);
 	void UpdateFrameMovementModifiersAndWeaponStats(CWeapon* pWeapon, float currentTime);
-		
+
 	virtual void SetParamsFromLua(SmartScriptTable &rTable);
 
 	virtual float CalculatePseudoSpeed(bool wantSprint, float speedOverride = -1.0f) const;
@@ -979,7 +982,7 @@ public:
 	void SetThirdPerson(bool thirdPersonEnabled, bool force = false);
 
 	virtual int  IsGod();
-	
+
 	void RestartMannequin();
 	virtual void Revive( EReasonForRevive reasonForRevive = kRFR_Spawn );
 	virtual void Kill();
@@ -1000,7 +1003,7 @@ public:
 	virtual void ResetAnimationState();
 
 	virtual void AddHeatPulse(const float intensity, const float time);
-	
+
 	float GetSprintStaminaLevel() const;
 
 	//IPlayerProfileListener
@@ -1062,7 +1065,7 @@ public:
 	virtual void PostUpdate(float frameTime);
 
 	virtual void AnimationEvent(ICharacterInstance *pCharacter, const AnimEventInstance &event);
-	
+
 	virtual void SetViewRotation( const Quat &rotation );
 	void SetViewRotationAndKeepBaseOrientation( const Quat &rotation );
 	void SetForceLookAt(const Vec3& lookAtDirection, const bool bForcedLookAtBlendingEnabled = true);
@@ -1111,8 +1114,8 @@ public:
 	bool CanFall() const;
 	virtual void KnockDown(float backwardsImpulse);
 
-  virtual void SetLookAtTargetId(EntityId targetId, float interpolationTime=1.f);
-  virtual void SetForceLookAtTargetId(EntityId targetId, float interpolationTime=1.f);
+	virtual void SetLookAtTargetId(EntityId targetId, float interpolationTime=1.f);
+	virtual void SetForceLookAtTargetId(EntityId targetId, float interpolationTime=1.f);
 
 	virtual void DamageInfo(EntityId shooterID, EntityId weaponID, IEntityClass *pProjectileClass, float damage, int damageType, const Vec3 hitDirection);
 
@@ -1229,7 +1232,7 @@ public:
 	void NetSetInStealthKill(bool inKill, EntityId targetId, uint8 animIndex);
 	void StopStealthKillTargetMovement(EntityId playerId);
 	void OnPickedUpPickableAmmo( IEntityClass* pAmmoType, int count );
-	
+
 	struct SStagingParams
 	{
 		SStagingParams() : 
@@ -1283,13 +1286,13 @@ public:
 	void StartFlashbangEffects(const float time, const EntityId shooterId);
 	void StopFlashbangEffects();
 	void UpdateFlashbangEffect(float frameTime);
-	
+
 	void StartTinnitus();
 	void UpdateTinnitus(float frameTime);
 	void StopTinnitus();
 
 	void AttemptStealthKill(EntityId enemyEntityId);
-	
+
 	void FailedStealthKill();
 	void EnterLargeObjectInteraction(EntityId objectEntityId, const bool bSkipKickAnim = false) { m_largeObjectInteraction.Enter(objectEntityId, bSkipKickAnim);}
 	void RequestEnterPickAndThrow( EntityId entityPicked );
@@ -1323,7 +1326,7 @@ public:
 	void OnCollision(EventPhysCollision *physCollision);
 
 	const QuatT	&GetLastSTAPCameraDelta() const;
-	
+
 	void SetClientSoundmood(EClientSoundmoods soundmood);
 	EClientSoundmoods FindClientSoundmoodBestFit() const;
 
@@ -1449,8 +1452,8 @@ private:
 
 	virtual void InitGameParams(const SActorGameParams &gameParams, const bool reloadCharacterSounds);
 
-  bool  MountedGunControllerEnabled() const   { return m_mountedGunControllerEnabled; }
-  void  MountedGunControllerEnabled(bool val) { m_mountedGunControllerEnabled = val; }
+	bool  MountedGunControllerEnabled() const   { return m_mountedGunControllerEnabled; }
+	void  MountedGunControllerEnabled(bool val) { m_mountedGunControllerEnabled = val; }
 
 	// Support for both AI and players
 	void SelectMovementHierarchy();
@@ -1478,11 +1481,11 @@ protected:
 	bool IsSoundPlaying(EPlayerSounds sound) const { return m_sounds[sound].audioSignalPlayer.IsPlaying( GetEntity()->GetId() ); }
 
 	CSprintStamina *m_pSprintStamina;
-	
+
 	Matrix34 m_clientViewMatrix;
 
 	Vec3		m_eyeOffset;	// View system - used to interpolate to goal eye offset
-												//the offset from the entity origin to eyes, its not the real offset vector but its referenced to player view direction.
+	//the offset from the entity origin to eyes, its not the real offset vector but its referenced to player view direction.
 
 	Vec3		m_weaponOffset;
 
@@ -1496,14 +1499,14 @@ protected:
 
 	Vec3		m_forcedLookDir;
 	EntityId		m_forcedLookObjectId;
-	
+
 	EntityId		m_lastFlashbangShooterId;
 	float				m_lastFlashbangTime;
 
 	float				m_lastZoomedTime;
 
 	SPlayerStats		m_stats;
-	
+
 	std::unique_ptr<IPlayerInput> m_pPlayerInput;
 
 	// for foot/leg ik
@@ -1524,7 +1527,7 @@ protected:
 	float m_fDeathTime;
 
 	bool		m_sufferingHighLatency;
-	
+
 	CVehicleClient* m_pVehicleClient;
 	Vec3 m_vehicleViewDir;
 
@@ -1532,10 +1535,10 @@ protected:
 	{
 		CAudioSignalPlayer audioSignalPlayer;
 		bool isRepeated;
-	
+
 		SSound() : isRepeated(false)	{}
 	};
-	
+
 	SSound m_sounds[ESound_Player_Last];
 	int m_footstepCounter;
 
@@ -1547,6 +1550,15 @@ protected:
 	IEntityAudioProxyPtr	m_pIEntityAudioProxy;
 
 	SStagingParams m_stagingParams;
+
+
+	//arkenthera
+	CraftSystem* m_pCraftSystem;
+	SpellSystem* m_pSpellSystem;
+public:
+	CraftSystem* GetCraftSystem();
+	SpellSystem* GetSpellSystem();
+protected:
 
 	static const int									k_maxActivePlayerPlugIns = 6;
 
@@ -1564,7 +1576,7 @@ protected:
 	CPlayerPlugin_InteractiveEntityMonitor*				m_pInteractiveEntityMonitorPlugin;
 
 	CPlayerModifiableValues                       m_modifiableValues;
-	
+
 	SCharacterMoveRequest		m_request;
 	CMountedGunController		m_mountedGunController;
 	SPlayerRotationParams m_playerRotationParams;
@@ -1576,12 +1588,12 @@ protected:
 
 	CHitRecoilGameEffect m_hitRecoilGameEffect;
 	CPlayerHealthGameEffect m_playerHealthEffect;
-	
+
 	float m_thermalVisionBaseHeat;
 
 	// Network
 	bool  m_netFlashBangStun;
-  bool  m_mountedGunControllerEnabled;
+	bool  m_mountedGunControllerEnabled;
 	uint8 m_jumpCounter;
 	Vec3	m_jumpVel;
 	uint8 m_mpModelIndex;
