@@ -29,6 +29,8 @@ History:
 #include <IGameObject.h>
 #include <IHardwareMouse.h>
 
+class SpellSystem;
+
 namespace Spells
 {
 	enum ESpells
@@ -45,33 +47,28 @@ public:
 	virtual void OnRelease() = 0;
 
 	virtual void BuildEntity() = 0;
-	virtual void Update() = 0;
+	virtual void PostUpdate(float dt) = 0;
 };
 
-class BuildFireCamp : public ISpell,public IHardwareMouseEventListener
+class BuildFireCamp : public ISpell
 {
 public:
-	BuildFireCamp();
+	BuildFireCamp(SpellSystem*);
 	~BuildFireCamp();
 
 	void OnPress();
 	void OnRelease();
 
-	void Update();
+	void PostUpdate(float dt);
 	void BuildEntity();
 
-	void OnHardwareMouseEvent(int iX,int iY,EHARDWAREMOUSEEVENT eHardwareMouseEvent, int wheelDelta = 0);
-
-
-private:
-	int m_mouseX;
-	int m_mouseY;
-
+	CPlayer* m_pPlayer;
+	bool m_Pressing;
 	Vec3 mouseWorldPos;
-	void CalculateMouseWorldPos();
 	IEntity* localEntity;
+	SpellSystem* m_SpellSystem;
 };
-class SpellSystem
+class SpellSystem : public IHardwareMouseEventListener
 {
 public:
 	SpellSystem();
@@ -82,7 +79,17 @@ public:
 	void OnSpellPressed(int SpellId);
 	void OnSpellReleased(int SpellId);
 
+	void PostUpdate(float dt);
+
+	void OnHardwareMouseEvent(int iX,int iY,EHARDWAREMOUSEEVENT eHardwareMouseEvent, int wheelDelta = 0);
+
 	ISpell* lastSpell;
+
+	Vec3 GetMouseCoordinates();
+
+private:
+	int m_mouseX;
+	int m_mouseY;
 };
 
 #endif

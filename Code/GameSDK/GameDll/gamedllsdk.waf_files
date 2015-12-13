@@ -140,7 +140,9 @@
          "ScriptBind_Actor.h",
          "Health.h",
 		 "ProceduralCollectibleSystem.h",
-		 "CraftableCollectible.h"
+		 "CraftableCollectible.h",
+		 "Campfire.cpp",
+		 "Campfire.h"
       ],
       "Actor Files/Animation":[
          "MovementAction.cpp",

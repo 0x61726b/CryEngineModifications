@@ -83,7 +83,8 @@ CraftSystem::CraftSystem()
 }
 CraftSystem::~CraftSystem()
 {
-
+	IUIElement* pHUD = gEnv->pFlashUI->GetUIElement( "ArkenUI" );
+	pHUD->RemoveEventListener(this);
 }
 
 void CraftSystem::AddItem(ICraftable* item)
@@ -227,11 +228,13 @@ void CraftSystem::UpdateUI()
 				case ECraftableItems::Bush:
 					{
 						pArkenUI->CallFunction( "SetBushText",args,&res );
+						pArkenUI->CallFunction( "BushHighlight",args,&res );
 					}
 					break;
 				case ECraftableItems::Flintstone:
 					{
 						pArkenUI->CallFunction( "SetFlintText",args,&res );
+						pArkenUI->CallFunction( "FlintHighlight",args,&res );
 					}
 					break;
 				default:

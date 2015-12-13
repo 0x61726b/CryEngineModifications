@@ -968,6 +968,10 @@ void CPlayerInput::PostUpdateEx()
 	CalculateDestination();
 }
 
+const Vec3& CPlayerInput::GetMouseWorldPosition()
+{
+	return mouseDestination;
+}
 
 void CPlayerInput::OnHardwareMouseEvent(int iX,int iY,EHARDWAREMOUSEEVENT eHardwareMouseEvent, int wheelDelta)
 {
@@ -988,6 +992,7 @@ void CPlayerInput::CalculateDestination()
 
 	Vec3 vDir = vPos1 - vPos0;
 	vDir.Normalize();
+
 
 
 	ray_hit hit;

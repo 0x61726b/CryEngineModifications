@@ -148,6 +148,7 @@ History:
 #include "GameCVars.h"
 
 #include "Craftable.h"
+#include "Campfire.h"
 
 #define HIDE_FROM_EDITOR(className)																																				\
   { IEntityClass *pItemClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass(className);\
@@ -362,6 +363,8 @@ void InitGameFactory(IGameFramework *pFramework)
 
 	REGISTER_GAME_OBJECT(pFramework, CraftableBush,"Scripts/Entities/arken/CraftableBush.lua");
 	REGISTER_GAME_OBJECT(pFramework, CraftableFlintstone,"Scripts/Entities/arken/CraftableFlintstone.lua");
+
+	REGISTER_FACTORY(pFramework, "Campfire",CCampfire,false);
 	//~
 
 	REGISTER_GAME_OBJECT_WITH_IMPL(pFramework, CTFFlag, CarryEntity, "Scripts/Entities/Multiplayer/CTFFlag.lua");

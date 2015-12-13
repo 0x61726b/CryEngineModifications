@@ -4381,6 +4381,8 @@ void CPlayer::PostUpdate(float frameTime)
 	}
 
 	UpdateSpectator(frameTime);
+
+	m_pSpellSystem->PostUpdate(frameTime);
 }
 
 void CPlayer::CameraShake(float angle,float shift,float duration,float frequency,Vec3 pos,int ID,const char* source) 

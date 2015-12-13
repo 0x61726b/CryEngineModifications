@@ -29,15 +29,19 @@ History:
 #include "ItemResourceCache.h"
 #include "Game.h"
 #include "GameParameters.h"
+#include "PlayerInput.h"
 
 SpellSystem::SpellSystem()
+	: lastSpell(NULL),
+	m_mouseX(0),
+	m_mouseY(0)
 {
-
+	gEnv->pHardwareMouse->AddListener(this);
 }
 
 SpellSystem::~SpellSystem()
 {
-
+	gEnv->pHardwareMouse->RemoveListener(this);
 }
 
 void SpellSystem::Reset()
@@ -49,7 +53,7 @@ void SpellSystem::OnSpellPressed(int SpellId)
 {
 	if(SpellId == Spells::ESpells::BuildFireCamp)
 	{
-		BuildFireCamp* fireCamp = new BuildFireCamp;
+		BuildFireCamp* fireCamp = new BuildFireCamp(this);
 		lastSpell = fireCamp;
 
 		fireCamp->OnPress();
@@ -61,107 +65,73 @@ void SpellSystem::OnSpellReleased(int SpellId)
 	if(lastSpell)
 		lastSpell->OnRelease();
 }
-BuildFireCamp::BuildFireCamp()
-	: m_mouseX(0),
-	m_mouseY(0),
+BuildFireCamp::BuildFireCamp(SpellSystem* s)
+	:
 	mouseWorldPos(Vec3(0,0,0)),
-	localEntity(NULL)
+	localEntity(NULL),
+	m_SpellSystem(s)
 {
-	//tHERE IS NO TIME TO GET AN EVENT BEFORE THE UPDATE TICK. FIX PLZ
-	gEnv->pHardwareMouse->AddListener(this);
+	m_pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
 }
 
 BuildFireCamp::~BuildFireCamp()
 {
-	gEnv->pHardwareMouse->RemoveListener(this);
+
 }
 void BuildFireCamp::OnPress()
 {
+	m_Pressing = true;
 	BuildEntity();
 }
 
 void BuildFireCamp::OnRelease()
 {
-
+	m_Pressing = false;
 }
 
-void BuildFireCamp::Update()
+void BuildFireCamp::PostUpdate(float dt)
 {
+	if(m_Pressing)
+	{
+		if(localEntity)
+		{
+			Vec3 pos = m_pPlayer->GetPlayerInput()->GetMouseWorldPosition();
+			localEntity->SetPos( m_pPlayer->GetPlayerInput()->GetMouseWorldPosition() );
+			CryLog("Moving to %f %f %f",pos.x,pos.y,pos.z);
+		}
+	}
+}
 
+void SpellSystem::PostUpdate(float dt)
+{
+	if(lastSpell)
+		lastSpell->PostUpdate(dt);
 }
 
 void BuildFireCamp::BuildEntity()
 {
-	//SEntitySpawnParams ESP;
-	//ESP.pClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass("BasicEntity");
-	//if(!ESP.pClass)
-	//	return;
+	SEntitySpawnParams ESP;
+	ESP.pClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass("Campfire");
+	if(!ESP.pClass)
+		return;
 
-	CalculateMouseWorldPos();
-	Vec3 entityPos = mouseWorldPos;
+	CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
 
-	//ESP.nFlags = ENTITY_FLAG_MODIFIED_BY_PHYSICS | ENTITY_FLAG_SPAWNED | ENTITY_FLAG_CALC_PHYSICS | ENTITY_FLAG_CLIENT_ONLY; 
-	//ESP.vScale = Vec3(1,1,1);
-	//ESP.vPosition = entityPos;
+	Vec3 entityPos = pPlayer->GetPlayerInput()->GetMouseWorldPosition();
 
-	string effect = "smoke_and_fire.fire_small.fire1";
-
-	//First, cache the effect - you would normally do this elsewhere in your code
-	CItemParticleEffectCache& particleCache = g_pGame->GetGameSharedParametersStorage()->GetItemResourceCache().GetParticleEffectCache();
-	particleCache.CacheParticle(effect);
-
-
-	//Get the effect from the cache
-	IParticleEffect* pParticleEffect = particleCache.GetCachedParticle(effect);
-
-	if (pParticleEffect)
-	{
-		Matrix34 loc;
-		loc.SetIdentity();
-		loc.SetTranslation(entityPos);
-		//spawn the effect
-		IParticleEmitter* pEffect = pParticleEffect->Spawn(false, loc);
-	}
-	//JB: end spawn a particle effect
+	ESP.nFlags = ENTITY_FLAG_MODIFIED_BY_PHYSICS | ENTITY_FLAG_SPAWNED | ENTITY_FLAG_CALC_PHYSICS | ENTITY_FLAG_CLIENT_ONLY; 
+	ESP.vScale = Vec3(1,1,1);
+	ESP.vPosition = entityPos;
+	localEntity = gEnv->pEntitySystem->SpawnEntity(ESP, false);
+	gEnv->pEntitySystem->InitEntity(localEntity,ESP);
 }
 
-
-void BuildFireCamp::CalculateMouseWorldPos()
-{
-	//Calculate destination
-	int invMouseY = gEnv->pRenderer->GetHeight() - m_mouseY;
-
-	Vec3 vPos0(0,0,0);
-	gEnv->pRenderer->UnProjectFromScreen((float)m_mouseX, (float)invMouseY, 0, &vPos0.x, &vPos0.y, &vPos0.z);
-
-	Vec3 vPos1(0,0,0);
-	gEnv->pRenderer->UnProjectFromScreen((float)m_mouseX, (float)invMouseY, 1, &vPos1.x, &vPos1.y, &vPos1.z);
-
-	Vec3 vDir = vPos1 - vPos0;
-	vDir.Normalize();
-
-
-	ray_hit hit;
-	const unsigned int flags = rwi_stop_at_pierceable|rwi_colltype_any;
-
-	if (gEnv->pPhysicalWorld && gEnv->pPhysicalWorld->RayWorldIntersection(vPos0, vDir *  gEnv->p3DEngine->GetMaxViewDistance(), ent_terrain, flags, &hit, 1))
-	{
-		mouseWorldPos = hit.pt;
-		if(hit.pCollider)
-		{
-			if(IEntity *pEntity = gEnv->pEntitySystem->GetEntityFromPhysics(hit.pCollider))
-			{
-				/*IGeomCacheRenderNode* node = pEntity->GetGeomCacheRenderNode(0);*/
-
-
-
-			}
-
-		}
-	}
-}
-void BuildFireCamp::OnHardwareMouseEvent(int iX,int iY,EHARDWAREMOUSEEVENT eHardwareMouseEvent, int wheelDelta )
+void SpellSystem::OnHardwareMouseEvent(int iX,int iY,EHARDWAREMOUSEEVENT eHardwareMouseEvent, int wheelDelta )
 {
 	m_mouseX = iX;
 	m_mouseY = iY;
+}
+Vec3 SpellSystem::GetMouseCoordinates()
+{
+	return Vec3((float)m_mouseX,(float)m_mouseY,0);
 }

@@ -148,6 +148,8 @@ public:
 		return (m_lastUpdate.GetValue() != 0);
 	}
 
+		const Vec3& GetMouseWorldPosition() { return mousePos; }
+	Vec3 mousePos;
 protected:
 	float CalculatePseudoSpeed() const;
 

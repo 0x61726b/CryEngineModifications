@@ -80,6 +80,7 @@ public:
 	void PreUpdateEx();
 	void UpdateEx();
 	void PostUpdateEx();
+	const Vec3& GetMouseWorldPosition();
 	// IPlayerInput
 	virtual void PreUpdate();
 	virtual void Update();
@@ -466,6 +467,9 @@ public:
 
 	virtual float GetLastRegisteredInputTime() const { return 0.0f; }
 	virtual void SerializeSaveGame( TSerialize ser ) {}
+
+	const Vec3& GetMouseWorldPosition() { return mousePos; }
+	Vec3 mousePos;
 	// ~IPlayerInput
 
 private:

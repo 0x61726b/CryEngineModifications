@@ -49,6 +49,9 @@ public:
 	EDefaultableBool GetMove() { return m_move; }
 	void SetMove(EDefaultableBool value) { m_move = value; }
 
+	const Vec3& GetMouseWorldPosition() { return mousePos; }
+	Vec3 mousePos;
+
 private:
 	void SelectEquipmentPackage();
 	void HandleDeathAndSuicide(CGameRules* const pGameRules);
@@ -74,7 +77,7 @@ private:
 
 	uint8 m_stance;
 	uint8 m_jump;
-	
+
 	Vec3 m_spawnPosition;
 	Vec3 m_targetPosition;
 	float m_timeToReachTarget;

@@ -126,6 +126,8 @@ struct IPlayerInput
 	virtual void SerializeSaveGame( TSerialize ser ) = 0;
 
 	virtual void GetMemoryUsage(ICrySizer *pSizer ) const =0;
+
+	virtual const Vec3& GetMouseWorldPosition() = 0;
 };
 
 #endif
