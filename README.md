@@ -5,4 +5,5 @@ Changes to CryEngine 3 source code for own project
 
 - Isometric Diablo style camera
 - Mouse Movement
-- Crafting system
+- Crafting system - Combine collectible items to make a new one with special effects
+- Skill system
