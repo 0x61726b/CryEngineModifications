@@ -135,7 +135,7 @@ bool CraftSystem::HasRequiredItems(IProduct* p)
 			if(craftable->GetType() == item)
 				count++;
 		}
-		if(quantity != count)
+		if(quantity < count)
 			ok = false;
 	}
 	return ok;
@@ -158,6 +158,33 @@ void CraftSystem::TryCraft(EProducts product)
 		break;
 	}
 }
+
+void CraftSystem::RemoveItems(IProduct* p)
+{
+	IProduct::CraftingRules rules = p->GetRequiredItemList();
+
+	IProduct::CraftingRules::iterator It = rules.begin();
+
+	bool ok = true;
+	for(It; It != rules.end(); ++It)
+	{
+		ECraftableItems item = It->first;
+		int quantity		 = It->second;
+
+		for(int i=0; i < m_vInventory.size(); ++i)
+		{
+			ICraftable* craftable = m_vInventory.at(i);
+
+			std::vector<ICraftable*>::iterator it = std::find(m_vInventory.begin(),m_vInventory.end(),craftable);
+
+			if(it != m_vInventory.end())
+				m_vInventory.erase(it);
+		}
+	}
+
+	UpdateUI();
+}
+
 
 int CraftSystem::GetCraftableCount(ECraftableItems c)
 {
@@ -224,6 +251,7 @@ void CraftSystem::UpdateUI()
 				case ECraftableItems::Bush:
 					{
 						ArkenUIController::Get()->SetBushText( ToString(GetCraftableCount(item->GetType())) );
+						
 					}
 					break;
 				case ECraftableItems::Flintstone:
@@ -236,5 +264,6 @@ void CraftSystem::UpdateUI()
 				}
 			}
 		}
+		ArkenUIController::Get()->SetObjectiveOne(GetCraftableCount(ECraftableItems::Bush),GetCraftableCount(ECraftableItems::Flintstone),false,true);
 	}
 }

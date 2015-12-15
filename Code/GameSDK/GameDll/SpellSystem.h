@@ -28,6 +28,9 @@ History:
 
 #include <IGameObject.h>
 #include <IHardwareMouse.h>
+#include "HungerSanityController.h"
+
+#define FIRECAMP_REQUIRED_SANITY 40
 
 class SpellSystem;
 
@@ -46,6 +49,9 @@ public:
 	virtual void OnPress() = 0;
 	virtual void OnRelease() = 0;
 
+	virtual void OnSpellRelease() = 0; //Means that right click is pressed.Handle this event accordingly.
+	virtual bool OnSpellActivate() = 0; //Means that left click is pressed 2nd time.
+
 	virtual void BuildEntity() = 0;
 	virtual void PostUpdate(float dt) = 0;
 };
@@ -58,17 +64,19 @@ public:
 
 	void OnPress();
 	void OnRelease();
+	void OnSpellRelease();
+	bool OnSpellActivate();
 
 	void PostUpdate(float dt);
 	void BuildEntity();
 
 	CPlayer* m_pPlayer;
-	bool m_Pressing;
+	bool m_bPlacing;
 	Vec3 mouseWorldPos;
 	IEntity* localEntity;
 	SpellSystem* m_SpellSystem;
 };
-class SpellSystem : public IHardwareMouseEventListener
+class SpellSystem : public IHardwareMouseEventListener,public IHungerSanityEventListener
 {
 public:
 	SpellSystem();
@@ -78,8 +86,13 @@ public:
 
 	void OnSpellPressed(int SpellId);
 	void OnSpellReleased(int SpellId);
+	void OnRightClick();
+	bool OnLeftClick();
 
 	void PostUpdate(float dt);
+
+	void OnSanityChanged();
+	void OnHungerChanged();
 
 	void OnHardwareMouseEvent(int iX,int iY,EHARDWAREMOUSEEVENT eHardwareMouseEvent, int wheelDelta = 0);
 
@@ -87,9 +100,12 @@ public:
 
 	Vec3 GetMouseCoordinates();
 
+	std::vector<ISpell*> m_vActiveSpells;
 private:
 	int m_mouseX;
 	int m_mouseY;
+
+
 };
 
 #endif

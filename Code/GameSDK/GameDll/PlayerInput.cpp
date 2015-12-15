@@ -130,6 +130,7 @@ CPlayerInput::CPlayerInput( CPlayer * pPlayer ) :
 		ADD_HANDLER(attack1_xi, OnActionAttackRightTrigger);
 		ADD_HANDLER(attack1, OnActionAttack);
 		ADD_HANDLER(useSkill1,OnSkillOne);
+		ADD_HANDLER(attack2,OnActionAttack2);
 
 
 		ADD_HANDLER(special, OnActionSpecial);
@@ -862,7 +863,14 @@ bool CPlayerInput::OnSkillOne(EntityId entityId, const ActionId& actionId, int a
 	}
 	return false;
 }
-
+bool CPlayerInput::OnActionAttack2(EntityId entityId, const ActionId& actionId, int activationMode, float value)
+{
+	if(activationMode == eAAM_OnRelease)
+	{
+		m_pPlayer->GetSpellSystem()->OnRightClick();
+	}
+	return false;
+}
 bool CPlayerInput::OnActionAttack(EntityId entityId, const ActionId& actionId, int activationMode, float value)
 {
 
@@ -902,10 +910,12 @@ bool CPlayerInput::OnActionAttack(EntityId entityId, const ActionId& actionId, i
 		Ang3 smoothedDiffAngles = diffAngles;
 		/*CMovementRequest rotRequest;*/
 		request.AddDeltaRotation( smoothedDiffAngles );
-		m_pPlayer->m_pMovementController->RequestMovement( request );
+
+		if(!m_pPlayer->GetSpellSystem()->OnLeftClick())
+			m_pPlayer->m_pMovementController->RequestMovement( request ); //Dont move if using a spell at a location
 
 
-
+		
 	}
 	else
 	{

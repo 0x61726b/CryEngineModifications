@@ -1,0 +1,46 @@
+
+<UIElements name="Test"> <!-- Group name for this elements -->
+ 
+  <!-- definition of an UI element named "HUD". This name in combination with instance id is used to identify a UI element at runtime. -->
+  <UIElement name="RippleEffect">
+ 
+    <!-- gfx/swf file for this UI element. This is the path to the actual flash asset.
+         in this example the HUD element is using "Game/Libs/UI/HUD.gfx" file. This can potentially be
+         a more complicated path e.g. in cases when you have a lot of UI elements and you want to have
+         better structure, so that everything is easy to find (split UI elements in Menu and HUD elements)
+     -->
+    <GFx file="RippleEffect.gfx" layer="1">
+      <!-- the align mode of this element. These values will be discussed in a special section later on. -->
+      <Constraints>
+        <Align mode="dynamic" halign="center" valign="center" scale="1" max="1" />
+      </Constraints>
+    </GFx>
+ 
+    <!-- available functions -->
+    <functions>
+    </functions>
+ 
+    <!-- available events that are raised by the Flash asset -->
+    <events>
+    </events>
+ 
+    <!-- available variables -->
+    <variables>
+    </variables>
+ 
+    <!-- available arrays -->
+    <arrays>
+    </arrays>
+ 
+    <!-- available movieclips -->
+    <movieclips>
+    </movieclips>
+ 
+  </UIElement>
+ 
+  <!-- definition of another UI element named "LoadingScreen" -->
+  <UIElement name="LoadingScreen">
+      ...
+  </UIElement>
+ 
+</UIElements>

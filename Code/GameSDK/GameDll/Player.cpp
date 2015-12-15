@@ -547,7 +547,7 @@ CPlayer::CPlayer()
 	, m_fOxygenLevel(1.0f),
 	m_pCraftSystem(NULL),
 	m_pSpellSystem(NULL),
-	hungerUpdateInterval(-10.0f)
+	m_pHungerSystem(NULL)
 {
 	m_pPlayerRotation = new CPlayerRotation(*this);
 	CRY_ASSERT( m_pPlayerRotation );
@@ -671,9 +671,12 @@ CPlayer::CPlayer()
 
 	m_netCloseCombatSnapTargetId = 0;
 
+	m_pHungerSystem = new CHungerSanityController;
 	m_pCraftSystem = new CraftSystem;
+
 	m_pSpellSystem = new SpellSystem;
 	m_pArkenUI = new ArkenUIController;
+
 }
 
 CPlayer::~CPlayer()
@@ -4386,36 +4389,14 @@ void CPlayer::PostUpdate(float frameTime)
 
 	UpdateSpectator(frameTime);
 
-	m_pSpellSystem->PostUpdate(frameTime);
-
-	if(hungerUpdateInterval > 0)
-		hungerUpdateInterval += frameTime;
 
 
-	if(hungerUpdateInterval > 3)
+	bool animControlled(m_stats.animationControlledID!=0);
+	if(!animControlled)
 	{
-		if(m_sHungerSanity.Hunger >= 0)
-		{
-			m_sHungerSanity.Hunger -= 10;
-			m_pArkenUI->SetHealthOrb(m_sHungerSanity.Hunger);
-		}
-		else
-		{
-			m_sHungerSanity.Hunger = 0;
-			m_pArkenUI->SetHealthOrb(m_sHungerSanity.Hunger);
-		}
-
-		if(m_sHungerSanity.Hunger < 35)
-		{
-			m_pArkenUI->EnableHungerWarning(true);
-		}
-		else
-		{
-			m_pArkenUI->EnableHungerWarning(false);
-		}
-		hungerUpdateInterval = 0;
+		m_pSpellSystem->PostUpdate(frameTime);
+		m_pHungerSystem->PostUpdate(frameTime);
 	}
-
 
 }
 
@@ -8893,10 +8874,9 @@ void CPlayer::Reset( bool toGame )
 
 	m_pCraftSystem->Reset();
 	m_pSpellSystem->Reset();
-	m_sHungerSanity.Hunger = 75;
-	m_sHungerSanity.Sanity = 50;
+	m_pHungerSystem->Reset();
 
-	
+
 }
 
 //////////////////////////////////////////////////////////////////////////

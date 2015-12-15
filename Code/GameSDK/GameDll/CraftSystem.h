@@ -103,6 +103,8 @@ public:
 	void AddItem(ICraftable*);
 	void RemoveItem(ICraftable*);
 
+	void RemoveItems(IProduct*);
+
 	void Reset();
 
 	void UpdateUI();

@@ -48,6 +48,11 @@ public:
 	void EnableSkillOne(bool);
 
 	void EnableHungerWarning(bool);
+
+	void ShowNotEnough(bool);
+
+	void SetObjectiveOne(int p11,int p21,bool p3,bool p4);
+	void SetObjectiveTwo(bool p1,bool p4);
 	
 	//IUIElementEventListener
 	void OnUIEvent( IUIElement* pSender, const SUIEventDesc& event, const SUIArguments& args );
@@ -55,6 +60,8 @@ public:
 
 	IUIElement* m_pArkenUI;
 	IUIElement* m_pSkillbar;
+
+	bool obj2;
 
 };
 //-------------------------------------------------------------------------

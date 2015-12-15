@@ -31,7 +31,8 @@ ArkenUIController* gArkenUIInstance = NULL;
 
 ArkenUIController::ArkenUIController()
 	: m_pArkenUI(NULL),
-	m_pSkillbar(NULL)
+	m_pSkillbar(NULL),
+	obj2(true)
 {
 	gArkenUIInstance = this;
 
@@ -100,9 +101,6 @@ void ArkenUIController::SetManaOrb(int percent)
 	TUIData res;
 
 	m_pSkillbar->CallFunction( "SetSanity",args,&res );
-
-	if(percent < 25)
-		EnableSkillOne(false);
 }
 
 void ArkenUIController::EnableSkillOne(bool status)
@@ -125,6 +123,53 @@ void ArkenUIController::EnableHungerWarning(bool status)
 	m_pArkenUI->CallFunction( "EnableHungerWarning",args,&res );
 }
 
+void ArkenUIController::ShowNotEnough(bool status)
+{
+	SUIArguments args;
+	args.AddArgument( status );
+
+	TUIData res;
+
+	m_pArkenUI->CallFunction( "ShowNotEnough",args,&res );
+}
+
+void ArkenUIController::SetObjectiveOne(int p11,int p21,bool p3,bool p4)
+{
+
+	SUIArguments args;
+	args.AddArgument( p11 );
+	args.AddArgument( 3 );
+	args.AddArgument( p21 );
+	args.AddArgument( 1 );
+	args.AddArgument( p3 );
+	args.AddArgument( p4 );
+
+
+	TUIData res;
+
+	m_pArkenUI->CallFunction( "SetObjectiveOne",args,&res );
+
+
+
+}
+
+void ArkenUIController::SetObjectiveTwo(bool p1,bool p4)
+{
+
+	SUIArguments args;
+	args.AddArgument( p1 );
+	args.AddArgument( p4 );
+
+
+
+	TUIData res;
+	
+	m_pArkenUI->CallFunction( "SetObjectiveTwo",args,&res );
+
+	SetObjectiveOne(0,0,false,false);
+
+
+}
 void ArkenUIController::OnUIEvent( IUIElement* pSender, const SUIEventDesc& event, const SUIArguments& args )
 {
 

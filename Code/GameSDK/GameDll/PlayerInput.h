@@ -150,6 +150,7 @@ private:
 
 
 	bool OnActionAttack(EntityId entityId, const ActionId& actionId, int activationMode, float value);
+	bool OnActionAttack2(EntityId entityId, const ActionId& actionId, int activationMode, float value);
 	bool OnSkillOne(EntityId entityId, const ActionId& actionId, int activationMode, float value);
 
 	bool OnActionMoveForward(EntityId entityId, const ActionId& actionId, int activationMode, float value);

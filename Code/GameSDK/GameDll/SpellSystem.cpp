@@ -33,6 +33,7 @@ History:
 
 #include "CraftSystem.h"
 #include "UI/ArkenUIController.h"
+#include "HungerSanityController.h"
 
 SpellSystem::SpellSystem()
 	: lastSpell(NULL),
@@ -40,26 +41,47 @@ SpellSystem::SpellSystem()
 	m_mouseY(0)
 {
 	gEnv->pHardwareMouse->AddListener(this);
+	CHungerSanityController::Get()->AddListener(this);
 }
 
 SpellSystem::~SpellSystem()
 {
 	gEnv->pHardwareMouse->RemoveListener(this);
+	CHungerSanityController::Get()->RemoveListener(this);
 }
 
 void SpellSystem::Reset()
 {
-
+	m_vActiveSpells.clear();
+	lastSpell = NULL;
+	m_mouseX = 0;
+	m_mouseY = 0;
 }
 
 void SpellSystem::OnSpellPressed(int SpellId)
 {
 	if(SpellId == Spells::ESpells::BuildFireCamp)
 	{
-		BuildFireCamp* fireCamp = new BuildFireCamp(this);
-		lastSpell = fireCamp;
+		CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
 
-		fireCamp->OnPress();
+		Products::Fire* f = new Products::Fire;
+		f->SetRules();
+		if(pPlayer->GetCraftSystem()->HasRequiredItems(f))
+		{
+			BuildFireCamp* fireCamp = new BuildFireCamp(this);
+			lastSpell = fireCamp;
+
+			fireCamp->OnPress();
+
+			ArkenUIController::Get()->SetObjectiveOne(pPlayer->GetCraftSystem()->GetCraftableCount(ECraftableItems::Bush),pPlayer->GetCraftSystem()->GetCraftableCount(ECraftableItems::Flintstone),true,true);
+
+			pPlayer->GetCraftSystem()->RemoveItems(f);
+
+			
+		}
+		delete f;
+
+
 	}
 }
 
@@ -68,11 +90,30 @@ void SpellSystem::OnSpellReleased(int SpellId)
 	if(lastSpell)
 		lastSpell->OnRelease();
 }
+
+void SpellSystem::OnRightClick()
+{
+	if(lastSpell)
+	{
+		lastSpell->OnSpellRelease();
+	}
+}
+
+bool SpellSystem::OnLeftClick()
+{
+	if(lastSpell)
+	{
+		return lastSpell->OnSpellActivate();
+	}
+	return false;
+}
+
 BuildFireCamp::BuildFireCamp(SpellSystem* s)
 	:
 	mouseWorldPos(Vec3(0,0,0)),
 	localEntity(NULL),
-	m_SpellSystem(s)
+	m_SpellSystem(s),
+	m_bPlacing(false)
 {
 	m_pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
 }
@@ -83,31 +124,65 @@ BuildFireCamp::~BuildFireCamp()
 }
 void BuildFireCamp::OnPress()
 {
-	m_Pressing = true;
-	
-
-	CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
-
-	SHungerSanity s = pPlayer->GetHungerSanity();
-
-	if(s.Sanity < 40 )
+	if(CHungerSanityController::Get()->GetSanity() < FIRECAMP_REQUIRED_SANITY)
 	{
+		ArkenUIController::Get()->ShowNotEnough(true);
 		return;
 	}
+
+	m_bPlacing = true;
+
+
+
 	BuildEntity();
-	s.Sanity -= 40;
-	pPlayer->SetHungerSanity(s);
-	ArkenUIController::Get()->SetManaOrb(pPlayer->GetHungerSanity().Sanity);
 }
 
 void BuildFireCamp::OnRelease()
 {
-	m_Pressing = false;
+
 }
 
+void BuildFireCamp::OnSpellRelease()
+{
+	if(m_bPlacing)
+	{
+		m_bPlacing = false;
+		if(localEntity)
+			gEnv->pEntitySystem->RemoveEntity( localEntity->GetId() );
+	}
+
+}
+
+bool BuildFireCamp::OnSpellActivate()
+{
+	if(m_bPlacing)
+	{
+		m_bPlacing = false;
+
+		m_SpellSystem->m_vActiveSpells.push_back(this);
+
+		CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+
+
+		int currentSanity = CHungerSanityController::Get()->GetSanity();
+		if(currentSanity < FIRECAMP_REQUIRED_SANITY )
+		{
+			m_bPlacing = false;
+			return false;
+		}
+		currentSanity -= FIRECAMP_REQUIRED_SANITY;
+		CHungerSanityController::Get()->SetSanity( currentSanity );
+		ArkenUIController::Get()->SetManaOrb(currentSanity);
+		ArkenUIController::Get()->SetObjectiveOne(0,0,false,false);
+		ArkenUIController::Get()->SetObjectiveTwo(false,true);
+
+		return true;
+	}
+	return false;
+}
 void BuildFireCamp::PostUpdate(float dt)
 {
-	if(m_Pressing)
+	if(m_bPlacing)
 	{
 		if(localEntity)
 		{
@@ -150,4 +225,23 @@ void SpellSystem::OnHardwareMouseEvent(int iX,int iY,EHARDWAREMOUSEEVENT eHardwa
 Vec3 SpellSystem::GetMouseCoordinates()
 {
 	return Vec3((float)m_mouseX,(float)m_mouseY,0);
+}
+
+void SpellSystem::OnHungerChanged()
+{
+
+}
+
+void SpellSystem::OnSanityChanged()
+{
+	int currentSanity = CHungerSanityController::Get()->GetSanity();
+
+	if( currentSanity < FIRECAMP_REQUIRED_SANITY)
+	{
+		ArkenUIController::Get()->EnableSkillOne(false);
+	}
+	else
+	{
+		ArkenUIController::Get()->EnableSkillOne(true);
+	}
 }

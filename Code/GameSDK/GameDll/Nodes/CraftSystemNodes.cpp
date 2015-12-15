@@ -248,7 +248,126 @@ public:
 	SActivationInfo m_actInfo;
 };
 
+////////////////////////////////
+
+
+
+class CFlowNode_HungerEvents : public CFlowBaseNode<eNCT_Instanced>,public IHungerSanityEventListener
+{
+	enum EInputPorts
+	{
+		eINP_Enable = 0,
+		eINP_Disable
+	};
+
+	enum EOutputPorts
+	{
+		eOUT_OnHungerReachZero = 0,
+	};
+
+public:
+	CFlowNode_HungerEvents( SActivationInfo * pActInfo )
+	{
+
+	}
+
+	virtual void GetMemoryUsage(ICrySizer * s) const
+	{
+		s->Add(*this);
+	}
+
+	CFlowNode_HungerEvents::~CFlowNode_HungerEvents() 
+	{
+		CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+
+		if(!pPlayer)
+			return;
+
+		CHungerSanityController* hungerSystem = CHungerSanityController::Get();
+
+		if(!hungerSystem)
+			return;
+
+		hungerSystem->RemoveListener(this);
+	}
+
+
+	virtual void GetConfiguration( SFlowNodeConfig &config )
+	{
+		static const SInputPortConfig inp_config[] = {
+			InputPortConfig_Void ("Enable", _HELP("Enables the event listener")),
+			InputPortConfig_Void ("Disable", _HELP("Disable the event listener")),
+			{0}
+		};
+		static const SOutputPortConfig out_config[] = {
+			OutputPortConfig_Void("OnHungerReachZero"),
+			{0}
+		};
+
+		config.sDescription = _HELP( "" );
+		config.pInputPorts = inp_config;
+		config.pOutputPorts = out_config;
+		config.SetCategory(EFLN_APPROVED);
+	}
+
+
+	virtual IFlowNodePtr Clone(SActivationInfo* pActInfo) { return new CFlowNode_HungerEvents(pActInfo); }
+
+
+	virtual void ProcessEvent( EFlowEvent event, SActivationInfo *pActInfo )
+	{
+		switch (event)
+		{
+		case eFE_Initialize:
+			{
+				m_actInfo = *pActInfo;
+				break;
+			}
+		case eFE_Activate:
+			{
+				if (IsPortActive( pActInfo, eINP_Enable ))
+				{
+					CHungerSanityController* hungerSystem = CHungerSanityController::Get();
+
+					if(!hungerSystem)
+						return;
+
+					hungerSystem->AddListener(this);
+				}
+				if (IsPortActive( pActInfo, eINP_Disable ))
+				{
+					CHungerSanityController* hungerSystem = CHungerSanityController::Get();
+
+					if(!hungerSystem)
+						return;
+
+					hungerSystem->RemoveListener(this);
+				}
+				break;
+			}
+		}
+	}
+
+	virtual void OnHungerChanged()
+	{
+		CHungerSanityController* hungerSystem = CHungerSanityController::Get();
+
+		if(hungerSystem->GetHunger() <= 0)
+		{
+			ActivateOutput(&m_actInfo, eOUT_OnHungerReachZero, true );
+		}
+	}
+
+	virtual void OnSanityChanged()
+	{
+
+	}
+
+
+	SActivationInfo m_actInfo;
+};
 
 REGISTER_FLOW_NODE( "Crafting:Inventory", CFlowNode_CraftSystemInventory );
 REGISTER_FLOW_NODE( "Crafting:Pickup", CFlowNode_CraftSystemPickup );
+REGISTER_FLOW_NODE( "HungerSystem:HungerEvents", CFlowNode_HungerEvents );
 //--------------------------------------------------------------------

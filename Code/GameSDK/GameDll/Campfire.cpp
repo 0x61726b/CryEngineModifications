@@ -29,6 +29,7 @@ History:
 #include "Player.h"
 #include "IEntityProxy.h"
 #include "UI/ArkenUIController.h"
+#include "HungerSanityController.h"
 
 void CCampfire::SProperties::InitFromScript(const IEntity& entity)
 {
@@ -49,7 +50,8 @@ void CCampfire::SProperties::InitFromScript(const IEntity& entity)
 
 CCampfire::CCampfire()
 	: m_pParticleEffect(NULL),
-	m_bGenerating(false)
+	m_bGenerating(false),
+	m_fTime(0.0f)
 {
 
 }
@@ -156,6 +158,9 @@ void CCampfire::ProcessEvent( SEntityEvent &event)
 			if(pActor == pPlayerAc)
 			{
 				m_bGenerating = true;
+				GetGameObject()->EnableUpdateSlot( this, 0 ) ;
+
+				CryLog("%s: Player can now interact with the entity.", GetEntity()->GetName());    
 			}
 
 			break;
@@ -171,6 +176,7 @@ void CCampfire::ProcessEvent( SEntityEvent &event)
 			{
 				gEnv->pLog->Log("%s: Player Left the area", GetEntity()->GetName());         
 				m_bGenerating = false;
+				GetGameObject()->DisableUpdateSlot( this, 0 ) ;
 			}
 
 			if(pActor != pPlayerAc)
@@ -198,26 +204,33 @@ void CCampfire::ProcessEvent( SEntityEvent &event)
 //--------------------------------------------------------------------
 void CCampfire::Update( SEntityUpdateContext& ctx, int updateSlot )
 {
+	if(m_bGenerating)
+	{
+		m_fTime += ctx.fFrameTime;
+		CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
 
+		if(m_fTime >= 1.9f)
+		{
+			
+			
+
+			int oldSanity = CHungerSanityController::Get()->GetSanity();
+			int newSanity = oldSanity;
+			newSanity += 6;
+
+			CHungerSanityController::Get()->SetSanity(newSanity);
+			ArkenUIController::Get()->SetManaOrb(newSanity);
+
+			CryLog("Regenareted player's Sanity from %f to %f",(float)oldSanity,(float)newSanity);
+
+			m_fTime = 0.0f;
+		}
+	}
 }
 //--------------------------------------------------------------------
 void CCampfire::PostUpdate(float frameTime ) //Not getting called
 {
-	if(m_bGenerating)
-	{
-		m_fTime += frameTime;
-		CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
 
-		if(m_fTime >= 0.98f)
-		{
-			SHungerSanity s = pPlayer->GetHungerSanity();
-			s.Sanity += 6;
-
-			ArkenUIController::Get()->SetManaOrb(s.Sanity);
-
-			pPlayer->SetHungerSanity(s);
-		}
-	}
 
 
 }

@@ -1,0 +1,76 @@
+
+<UIElements name="Arken"> <!-- Group name for this elements -->
+ 
+  <!-- definition of an UI element named "HUD". This name in combination with instance id is used to identify a UI element at runtime. -->
+  <UIElement name="ArkenUI">
+ 
+    <!-- gfx/swf file for this UI element. This is the path to the actual flash asset.
+         in this example the HUD element is using "Game/Libs/UI/HUD.gfx" file. This can potentially be
+         a more complicated path e.g. in cases when you have a lot of UI elements and you want to have
+         better structure, so that everything is easy to find (split UI elements in Menu and HUD elements)
+     -->
+    <GFx file="ArkenUI.swf" layer="1">
+      <!-- the align mode of this element. These values will be discussed in a special section later on. -->
+      <Constraints>
+        <Align mode="dynamic" halign="center" valign="center" scale="1" max="1" />
+      </Constraints>
+    </GFx>
+ 
+    <!-- available functions -->
+    <functions>
+      <function name="SetBushText" funcname="setBushText">
+          <param name="BushCount" desc="Bush count" type="int"/>
+      </function>
+      <function name="SetFlintText" funcname="setFlintText">
+          <param name="FlintCount" desc="Flint count" type="int"/>
+      </function>
+      <function name="EnableFire" funcname="enableFireButton">
+      </function>
+      <function name="DisableFire" funcname="disableFireButton">
+      </function>
+      <function name="FlintHighlight" funcname="flintHighlightAnimStart">
+      </function>
+      <function name="BushHighlight" funcname="bushHighlightAnimStart">
+      </function>
+      <function name="EnableHungerWarning" funcname="enableWarningText">
+          <param name="Action" type="bool"/>
+      </function>
+       <function name="ShowNotEnough" funcname="showNotEnough">
+          <param name="Action" type="bool"/>
+      </function>
+
+      <function name="SetObjectiveOne" funcname="setObjectiveOne">
+        <param name="p11" type="int"/>
+        <param name="p12" type="int"/>
+        <param name="p21" type="int"/>
+        <param name="p22" type="int"/>
+        <param name="p3" type="bool"/>
+        <param name="p4" type="bool"/>
+      </function>
+      <function name="SetObjectiveTwo" funcname="setObjectiveTwo">
+        <param name="p1" type="bool"/>
+        <param name="p4" type="bool"/>
+      </function>
+    </functions>
+ 
+    <!-- available events that are raised by the Flash asset -->
+    <events>
+      <event name="OnFireButton" fscommand="onFireReleased">
+      </event>
+    </events>
+ 
+    <!-- available variables -->
+    <variables>
+    </variables>
+ 
+    <!-- available arrays -->
+    <arrays>
+    </arrays>
+ 
+    <!-- available movieclips -->
+    <movieclips>
+    </movieclips>
+ 
+  </UIElement>
+ 
+</UIElements>

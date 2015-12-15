@@ -47,6 +47,7 @@ History:
 
 #include "CraftSystem.h"
 #include "SpellSystem.h"
+#include "HungerSanityController.h"
 
 
 struct IPlayerInput;
@@ -1569,19 +1570,12 @@ protected:
 	CraftSystem* m_pCraftSystem;
 	SpellSystem* m_pSpellSystem;
 	ArkenUIController* m_pArkenUI;
-
-	SHungerSanity m_sHungerSanity;
+	CHungerSanityController* m_pHungerSystem;
+	
 	float hungerUpdateInterval;
 	
 public:
-	const SHungerSanity& GetHungerSanity() { return m_sHungerSanity;}
-	void SetHungerSanity(const SHungerSanity& s) 
-	{
-		m_sHungerSanity = s;
 
-		clamp_tpl(m_sHungerSanity.Hunger,0,100);
-		clamp_tpl(m_sHungerSanity.Sanity,0,100);
-	}
 	CraftSystem* GetCraftSystem();
 	SpellSystem* GetSpellSystem();
 protected:
