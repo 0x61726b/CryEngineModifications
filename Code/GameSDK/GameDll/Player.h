@@ -113,6 +113,18 @@ union USpectatorModeData
 	}
 };
 
+struct SHungerSanity
+{
+	int Hunger;
+	int Sanity;
+
+	SHungerSanity()
+		: Hunger(75),
+		Sanity(50)
+		{
+
+		}
+};
 struct SSpectatorInfo
 {
 	USpectatorModeData	dataU;
@@ -474,6 +486,7 @@ class CPlayer :
 	friend class CIsometricInput;
 	friend class CAIInput;
 	friend class CNetPlayerInput;
+	friend class ArkenUIController;
 
 	//ergh. Better way of doing this?
 	friend class CLocalPlayerComponent;
@@ -1555,7 +1568,20 @@ protected:
 	//arkenthera
 	CraftSystem* m_pCraftSystem;
 	SpellSystem* m_pSpellSystem;
+	ArkenUIController* m_pArkenUI;
+
+	SHungerSanity m_sHungerSanity;
+	float hungerUpdateInterval;
+	
 public:
+	const SHungerSanity& GetHungerSanity() { return m_sHungerSanity;}
+	void SetHungerSanity(const SHungerSanity& s) 
+	{
+		m_sHungerSanity = s;
+
+		clamp_tpl(m_sHungerSanity.Hunger,0,100);
+		clamp_tpl(m_sHungerSanity.Sanity,0,100);
+	}
 	CraftSystem* GetCraftSystem();
 	SpellSystem* GetSpellSystem();
 protected:

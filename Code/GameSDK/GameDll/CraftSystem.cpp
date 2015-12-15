@@ -26,6 +26,7 @@ History:
 
 #include "StdAfx.h"
 #include "CraftSystem.h"
+#include "UI/ArkenUIController.h"
 //-------------------------------------------------------------------------
 
 
@@ -218,23 +219,16 @@ void CraftSystem::UpdateUI()
 			{
 				ICraftable* item = m_vInventory.at(i);
 
-				SUIArguments args;
-				args.AddArgument( GetCraftableCount(item->GetType()) );
-
-				TUIData res;
-
 				switch(item->GetType())
 				{
 				case ECraftableItems::Bush:
 					{
-						pArkenUI->CallFunction( "SetBushText",args,&res );
-						pArkenUI->CallFunction( "BushHighlight",args,&res );
+						ArkenUIController::Get()->SetBushText( ToString(GetCraftableCount(item->GetType())) );
 					}
 					break;
 				case ECraftableItems::Flintstone:
 					{
-						pArkenUI->CallFunction( "SetFlintText",args,&res );
-						pArkenUI->CallFunction( "FlintHighlight",args,&res );
+						ArkenUIController::Get()->SetFlintText( ToString(GetCraftableCount(item->GetType())) );
 					}
 					break;
 				default:

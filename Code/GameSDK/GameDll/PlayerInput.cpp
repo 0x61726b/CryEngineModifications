@@ -905,6 +905,7 @@ bool CPlayerInput::OnActionAttack(EntityId entityId, const ActionId& actionId, i
 		m_pPlayer->m_pMovementController->RequestMovement( request );
 
 
+
 	}
 	else
 	{
@@ -942,7 +943,7 @@ void CPlayerInput::UpdateEx()
 		request.ClearMoveTarget();
 		m_pPlayer->m_pMovementController->RequestMovement(request);
 
-
+		m_bMoving = false;
 	}
 
 	if(!stop)

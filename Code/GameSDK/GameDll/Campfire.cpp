@@ -28,6 +28,7 @@ History:
 #include "Campfire.h"
 #include "Player.h"
 #include "IEntityProxy.h"
+#include "UI/ArkenUIController.h"
 
 void CCampfire::SProperties::InitFromScript(const IEntity& entity)
 {
@@ -47,7 +48,8 @@ void CCampfire::SProperties::InitFromScript(const IEntity& entity)
 }
 
 CCampfire::CCampfire()
-	: m_pParticleEffect(NULL)
+	: m_pParticleEffect(NULL),
+	m_bGenerating(false)
 {
 
 }
@@ -153,12 +155,7 @@ void CCampfire::ProcessEvent( SEntityEvent &event)
 
 			if(pActor == pPlayerAc)
 			{
-				CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
-
-				if(!pPlayer)
-					return;
-
-
+				m_bGenerating = true;
 			}
 
 			break;
@@ -173,6 +170,7 @@ void CCampfire::ProcessEvent( SEntityEvent &event)
 			if(pActor == pPlayerAc)
 			{
 				gEnv->pLog->Log("%s: Player Left the area", GetEntity()->GetName());         
+				m_bGenerating = false;
 			}
 
 			if(pActor != pPlayerAc)
@@ -203,8 +201,24 @@ void CCampfire::Update( SEntityUpdateContext& ctx, int updateSlot )
 
 }
 //--------------------------------------------------------------------
-void CCampfire::PostUpdate(float frameTime )
+void CCampfire::PostUpdate(float frameTime ) //Not getting called
 {
+	if(m_bGenerating)
+	{
+		m_fTime += frameTime;
+		CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+
+		if(m_fTime >= 0.98f)
+		{
+			SHungerSanity s = pPlayer->GetHungerSanity();
+			s.Sanity += 6;
+
+			ArkenUIController::Get()->SetManaOrb(s.Sanity);
+
+			pPlayer->SetHungerSanity(s);
+		}
+	}
+
 
 }
 //--------------------------------------------------------------------

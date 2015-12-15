@@ -31,6 +31,9 @@ History:
 #include "GameParameters.h"
 #include "PlayerInput.h"
 
+#include "CraftSystem.h"
+#include "UI/ArkenUIController.h"
+
 SpellSystem::SpellSystem()
 	: lastSpell(NULL),
 	m_mouseX(0),
@@ -81,7 +84,20 @@ BuildFireCamp::~BuildFireCamp()
 void BuildFireCamp::OnPress()
 {
 	m_Pressing = true;
+	
+
+	CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+
+	SHungerSanity s = pPlayer->GetHungerSanity();
+
+	if(s.Sanity < 40 )
+	{
+		return;
+	}
 	BuildEntity();
+	s.Sanity -= 40;
+	pPlayer->SetHungerSanity(s);
+	ArkenUIController::Get()->SetManaOrb(pPlayer->GetHungerSanity().Sanity);
 }
 
 void BuildFireCamp::OnRelease()

@@ -1254,7 +1254,9 @@
          "UI/UICVars.h",
          "UI/UIManager.h",
          "UI/UITypes.h",
-         "UI/WarningsManager.h"
+         "UI/WarningsManager.h",
+		 "UI/ArkenUIController.h",
+		 "UI/ArkenUIController.cpp"
       ],
       "UI/EventSystems":[
          "UI/UIDialogs.cpp",

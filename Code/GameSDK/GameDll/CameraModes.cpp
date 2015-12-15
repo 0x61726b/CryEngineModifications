@@ -166,7 +166,15 @@ bool CDefaultCameraMode::UpdateView(const CPlayer& clientPlayer, SViewParams& vi
 	bool isThirdPerson = true;
 	bool ret = false;
 
-	IItem* pCurrentItem = clientPlayer.GetCurrentItem();
+	bool bWorldSpace = true;
+
+	// If rendering in camera space then remove world space position here
+	IEntity* pEntity = clientPlayer.GetEntity();
+	uint32 entityFlags = (pEntity) ? pEntity->GetSlotFlags(eIGS_FirstPerson) : 0;
+	if(entityFlags & ENTITY_SLOT_RENDER_NEAREST)
+	{
+		bWorldSpace = false;
+	}
 
 
 	//const CCameraPose cameraPose =
@@ -175,7 +183,11 @@ bool CDefaultCameraMode::UpdateView(const CPlayer& clientPlayer, SViewParams& vi
 	//	ThirdPersonCameraPose(clientPlayer, viewParams);
 
 	Vec3 playerPos = clientPlayer.GetEntity()->GetPos();
-	Vec3 isometricOffset = playerPos + Vec3(5,-5,12);
+	Vec3 isometricOffset = Vec3(5,-5,12);
+	if(bWorldSpace)
+	{
+		isometricOffset += playerPos;
+	}
 	const Vec3 lookAtEntityPosition = playerPos;
 	const Vec3 playerEyePosition = isometricOffset;
 
@@ -195,57 +207,57 @@ bool CDefaultCameraMode::UpdateView(const CPlayer& clientPlayer, SViewParams& vi
 
 	viewParams.position = cameraPose.GetPosition();
 	viewParams.rotation = cameraPose.GetRotation();
-
-#ifndef _RELEASE
-	if (g_pGameCVars->pl_debug_view)
-	{
-		CryWatch("DefaultCamera Pos (%.2f, %.2f, %.2f)", viewParams.position.x, viewParams.position.y, viewParams.position.z);
-		Vec3 fwd = viewParams.rotation.GetColumn1();
-		CryWatch("DefaultCamera Rot (%.2f, %.2f, %.2f, %.2f) (%f, %f, %f)", viewParams.rotation.v.x, viewParams.rotation.v.y, viewParams.rotation.v.z, viewParams.rotation.w, fwd.x, fwd.y, fwd.z);
-	}
-#endif //_RELEASE
-
-	if (!isThirdPerson)
-	{
-		// Prevent the camera from going any lower than the angle limit to make sure you
-		// don't see the stretching between the waist and torso (e.g. while reloading)
-		if (pCurrentItem)
-		{
-			CWeapon* pWeapon = (CWeapon*)pCurrentItem->GetIWeapon();
-			if (pWeapon)
-			{
-				Vec3 forward = viewParams.rotation.GetColumn1();
-				Vec3 down = Vec3(0, 0, -1);
-
-				float dotProd = forward.dot(down);
-				float angle = acos(dotProd);
-
-				SPlayerRotationParams::EAimType aimType = clientPlayer.GetCurrentAimType();
-				const SAimAccelerationParams &params = clientPlayer.GetPlayerRotationParams().GetVerticalAimParams(aimType);
-				float minAngle = DEG2RAD(90 + params.angle_min);
-
-				// Angle is relative to downwards direction, 0 degrees = straight down, 90 degrees = horizontal, 180 = straight up
-				if (angle < minAngle)
-				{
-					Vec3 crossProd = forward.cross(down);
-					float diff = angle - minAngle;
-					Quat adjustment = Quat::CreateRotationAA(diff, crossProd.GetNormalized());
-					viewParams.rotation = adjustment * viewParams.rotation;
-				}
-			}
-		}
-
-		ret = ApplyItemFPViewFilter(clientPlayer, pCurrentItem, viewParams);
-
-#ifndef _RELEASE
-		if (g_pGameCVars->pl_debug_view)
-		{
-			Vec3 fwd = viewParams.rotation.GetColumn1();
-			CryWatch("DefaultCamera(PostItem) Rot (%.2f, %.2f, %.2f, %.2f) (%f, %f, %f)", viewParams.rotation.v.x, viewParams.rotation.v.y, viewParams.rotation.v.z, viewParams.rotation.w, fwd.x, fwd.y, fwd.z);
-		}
-#endif //_RELEASE
-	}
-
+//
+//#ifndef _RELEASE
+//	if (g_pGameCVars->pl_debug_view)
+//	{
+//		CryWatch("DefaultCamera Pos (%.2f, %.2f, %.2f)", viewParams.position.x, viewParams.position.y, viewParams.position.z);
+//		Vec3 fwd = viewParams.rotation.GetColumn1();
+//		CryWatch("DefaultCamera Rot (%.2f, %.2f, %.2f, %.2f) (%f, %f, %f)", viewParams.rotation.v.x, viewParams.rotation.v.y, viewParams.rotation.v.z, viewParams.rotation.w, fwd.x, fwd.y, fwd.z);
+//	}
+//#endif //_RELEASE
+//
+//	if (!isThirdPerson)
+//	{
+//		// Prevent the camera from going any lower than the angle limit to make sure you
+//		// don't see the stretching between the waist and torso (e.g. while reloading)
+//		if (pCurrentItem)
+//		{
+//			CWeapon* pWeapon = (CWeapon*)pCurrentItem->GetIWeapon();
+//			if (pWeapon)
+//			{
+//				Vec3 forward = viewParams.rotation.GetColumn1();
+//				Vec3 down = Vec3(0, 0, -1);
+//
+//				float dotProd = forward.dot(down);
+//				float angle = acos(dotProd);
+//
+//				SPlayerRotationParams::EAimType aimType = clientPlayer.GetCurrentAimType();
+//				const SAimAccelerationParams &params = clientPlayer.GetPlayerRotationParams().GetVerticalAimParams(aimType);
+//				float minAngle = DEG2RAD(90 + params.angle_min);
+//
+//				// Angle is relative to downwards direction, 0 degrees = straight down, 90 degrees = horizontal, 180 = straight up
+//				if (angle < minAngle)
+//				{
+//					Vec3 crossProd = forward.cross(down);
+//					float diff = angle - minAngle;
+//					Quat adjustment = Quat::CreateRotationAA(diff, crossProd.GetNormalized());
+//					viewParams.rotation = adjustment * viewParams.rotation;
+//				}
+//			}
+//		}
+//
+//		ret = ApplyItemFPViewFilter(clientPlayer, pCurrentItem, viewParams);
+//
+//#ifndef _RELEASE
+//		if (g_pGameCVars->pl_debug_view)
+//		{
+//			Vec3 fwd = viewParams.rotation.GetColumn1();
+//			CryWatch("DefaultCamera(PostItem) Rot (%.2f, %.2f, %.2f, %.2f) (%f, %f, %f)", viewParams.rotation.v.x, viewParams.rotation.v.y, viewParams.rotation.v.z, viewParams.rotation.w, fwd.x, fwd.y, fwd.z);
+//		}
+//#endif //_RELEASE
+//	}
+//
 	return ret;
 }
 

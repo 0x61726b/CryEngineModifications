@@ -90,6 +90,9 @@ private:
 	void Reset();
 	void Spawn();
 
+	bool m_bGenerating;
+	float m_fTime;
+
 	IParticleEmitter* m_pParticleEffect;
 	SProperties m_ScriptsProps;
 };

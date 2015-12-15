@@ -152,6 +152,8 @@ History:
 #include <IHMDDevice.h>
 #include <IHMDManager.h>
 
+#include "UI/ArkenUIController.h"
+
 DEFINE_STATE_MACHINE( CPlayer, Movement ); 
 
 #define FOOTSTEPS_DEEPWATER_DEPTH 1  // meters
@@ -544,7 +546,8 @@ CPlayer::CPlayer()
 	, m_isHeadUnderWater(false)
 	, m_fOxygenLevel(1.0f),
 	m_pCraftSystem(NULL),
-	m_pSpellSystem(NULL)
+	m_pSpellSystem(NULL),
+	hungerUpdateInterval(-10.0f)
 {
 	m_pPlayerRotation = new CPlayerRotation(*this);
 	CRY_ASSERT( m_pPlayerRotation );
@@ -670,6 +673,7 @@ CPlayer::CPlayer()
 
 	m_pCraftSystem = new CraftSystem;
 	m_pSpellSystem = new SpellSystem;
+	m_pArkenUI = new ArkenUIController;
 }
 
 CPlayer::~CPlayer()
@@ -4383,6 +4387,36 @@ void CPlayer::PostUpdate(float frameTime)
 	UpdateSpectator(frameTime);
 
 	m_pSpellSystem->PostUpdate(frameTime);
+
+	if(hungerUpdateInterval > 0)
+		hungerUpdateInterval += frameTime;
+
+
+	if(hungerUpdateInterval > 3)
+	{
+		if(m_sHungerSanity.Hunger >= 0)
+		{
+			m_sHungerSanity.Hunger -= 10;
+			m_pArkenUI->SetHealthOrb(m_sHungerSanity.Hunger);
+		}
+		else
+		{
+			m_sHungerSanity.Hunger = 0;
+			m_pArkenUI->SetHealthOrb(m_sHungerSanity.Hunger);
+		}
+
+		if(m_sHungerSanity.Hunger < 35)
+		{
+			m_pArkenUI->EnableHungerWarning(true);
+		}
+		else
+		{
+			m_pArkenUI->EnableHungerWarning(false);
+		}
+		hungerUpdateInterval = 0;
+	}
+
+
 }
 
 void CPlayer::CameraShake(float angle,float shift,float duration,float frequency,Vec3 pos,int ID,const char* source) 
@@ -8859,6 +8893,10 @@ void CPlayer::Reset( bool toGame )
 
 	m_pCraftSystem->Reset();
 	m_pSpellSystem->Reset();
+	m_sHungerSanity.Hunger = 75;
+	m_sHungerSanity.Sanity = 50;
+
+	
 }
 
 //////////////////////////////////////////////////////////////////////////
