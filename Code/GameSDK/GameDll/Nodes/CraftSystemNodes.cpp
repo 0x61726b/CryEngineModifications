@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 -------------------------------------------------------------------------
-Description: Procedural Collectible Generation
+Description: Flow nodes for the crafting system,spell system and hunger system
 
 -------------------------------------------------------------------------
 History:
@@ -444,5 +444,9 @@ public:
 REGISTER_FLOW_NODE( "Crafting:Inventory", CFlowNode_CraftSystemInventory );
 REGISTER_FLOW_NODE( "Crafting:Pickup", CFlowNode_CraftSystemPickup );
 REGISTER_FLOW_NODE( "HungerSystem:HungerEvents", CFlowNode_HungerEvents );
+<<<<<<< HEAD
 REGISTER_FLOW_NODE( "Arken:SetThirdPerson", CFlowNode_SetThirdPerson );
 //--------------------------------------------------------------------
+=======
+//--------------------------------------------------------------------
+>>>>>>> 0df81d51f9a3aad1a29c2f3f5f31608a01916d3c

@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 -------------------------------------------------------------------------
-Description: Procedural Collectible Generation
+Description: Controls Flash UI,calls ActionScript
 
 -------------------------------------------------------------------------
 History:
@@ -237,6 +237,7 @@ void ArkenUIController::OnUIEvent( IUIElement* pSender, const SUIEventDesc& even
 		{
 			CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
 
+<<<<<<< HEAD
 			pPlayer->GetCraftSystem()->Craft("Pie");
 		}
 		int x = 0;
@@ -247,3 +248,6 @@ void ArkenUIController::OnUIEvent( IUIElement* pSender, const SUIEventDesc& even
 		//pPlayer->GetPlayerInput()->SetIgnoreMouseInput(true);
 	}
 }
+=======
+}
+>>>>>>> 0df81d51f9a3aad1a29c2f3f5f31608a01916d3c
