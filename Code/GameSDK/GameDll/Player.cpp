@@ -2652,9 +2652,6 @@ void CPlayer::SwitchPlayerInput(IPlayerInput* pNewPlayerInput)
 	m_pPlayerInput.reset(pNewPlayerInput);
 }
 
-
-
-
 void CPlayer::StartInteractiveActionByName( const char* interaction, bool bUpdateVisibility, float actionSpeed /*= 1.0f*/ )
 {
 	if(IsPlayer())

@@ -1847,7 +1847,7 @@ bool CPlayerInput::OnActionUse(EntityId entityId, const ActionId& actionId, int 
 	{
 		m_actions &= ~ACTION_USE;
 	}
-
+	
 	return filterOut;
 }
 

@@ -769,8 +769,11 @@ public:
 
 	void SwitchPlayerInput(IPlayerInput* pNewPlayerInput);
 
-protected:
 
+	//arkenthera
+	
+
+protected:
 	// CanFire helpers
 	bool CanFireOrMelee(bool isMelee) const;
 	bool CanFire_AI() const;
