@@ -30,20 +30,33 @@ History:
 #include "CraftSystem.h"
 //------------------------------------------------------------------------
 
-class CCraftable : public CGameObjectExtensionHelper<CCraftable, IGameObjectExtension>
+class CCraftable : public CGameObjectExtensionHelper<CCraftable, IGameObjectExtension>,public ICraftable
 {
 	struct SProperties
 	{
 		SProperties()
 			: m_Model(""),
-			m_Scale(1)
+			m_ItemCollectSoundTriggerID(""),
+			m_Scale(1),
+			m_Drop(-1),
+			m_Type(-1),
+			m_HealthBonus(0)
 		{
 
 		}
 		void InitFromScript( const IEntity& entity );
 
 		const char* m_Model;
+		const char* m_ItemCollectSoundTriggerID;
+		int			m_Drop;
+		int			m_Type;
+		int			m_HealthBonus;
 		float m_Scale;
+	};
+	enum ECraftableItemSounds
+	{
+		eSID_Collect,
+		eSID_Max
 	};
 public:
 	CCraftable();
@@ -76,39 +89,21 @@ public:
 		s->AddObject(this, sizeof(*this));
 	}
 
+protected:
+	SProperties m_ScriptsProps;
 
 private:
+	TAudioControlID m_audioControlIDs[eSID_Max];
+
+	IEntityAudioProxy* m_pEntityAudioProxy;
+	TAudioProxyID	   m_pAudioProxyId;
 
 	void Reset();
 
 	void Spawn();
 
-	SProperties m_ScriptsProps;
-};
-
-//See CraftingSystem ECraftableItems
-class CCraftableBush : public CCraftable,public ICraftable
-{
-public:
-	CCraftableBush();
-	~CCraftableBush();
-
-	//ICraftable
 	
-	//~ICraftable
 };
-
-class CCraftableFlintstone : public CCraftable,public ICraftable
-{
-public:
-	CCraftableFlintstone();
-	~CCraftableFlintstone();
-
-	//ICraftable
-	
-	//~ICraftable
-};
-//------------------------------------------------------------------------
 
 
 

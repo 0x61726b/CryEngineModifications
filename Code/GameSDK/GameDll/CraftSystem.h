@@ -31,59 +31,40 @@ History:
 #include <IFlashUI.h>
 
 
+//Move these to an xml file later
 enum ECraftableItems
 {
 	Bush,
 	Flintstone
 };
-enum EProducts
+
+enum EItemDrops
 {
-	Fire
+	Berry = 0,
+	Banana,
+	Durian,
+	Pomegranate,
+	DragonFruit,
+	Watermelon
 };
 
 
 class ICraftable
 {
 public:
-	ICraftable(ECraftableItems type) : Type(type) {}
+	ICraftable() {}
 	ECraftableItems GetType() { return Type; }
+	EItemDrops GetItemDropType() { return DropType;}
 
-private:
-	ECraftableItems Type;
-};
+	void SetType(ECraftableItems type) { Type = type;}
+	void SetItemDropType(EItemDrops drop) { DropType = drop;}
 
-class IProduct
-{
-public:
-	IProduct();
-	virtual ~IProduct();
-
-	typedef std::map<ECraftableItems,int> CraftingRules;
-	virtual void SetRules() = 0;
-	CraftingRules GetRequiredItemList();
-
-	virtual IEntity* GetEntity() { return m_pEntity;}
-	virtual void SetEntity() = 0;
-
-	virtual void Spawn() = 0;
 protected:
-	CraftingRules m_vRequires;
-	IEntity* m_pEntity;
+	ECraftableItems Type;
+	EItemDrops DropType;
 };
 
-namespace Products
-{
-	class Fire : public IProduct
-	{
-	public:
-		Fire();
-		~Fire() {}
 
-		void SetRules();
-		void SetEntity();
-		void Spawn();
-	};
-}
 class CraftSystemListener
 {
 public:
@@ -101,18 +82,21 @@ public:
 	void RemoveListener(CraftSystemListener* listener);
 
 	void AddItem(ICraftable*);
-	void RemoveItem(ICraftable*);
 
-	void RemoveItems(IProduct*);
+	void RemoveItems(EItemDrops e,int cnt);
 
 	void Reset();
 
 	void UpdateUI();
 
-	void TryCraft(EProducts product);
-	bool HasRequiredItems(IProduct*);
+	bool MakeItem1();
 
-	int GetCraftableCount(ECraftableItems c);
+	void Craft(const string&);
+
+	int GetCraftableCount(EItemDrops c);
+	std::vector<ICraftable*> GetCraftableOfType(EItemDrops e);
+
+	std::vector<ICraftable*> m_vTempList;
 
 	std::vector<ICraftable*> m_vInventory;
 	std::vector<CraftSystemListener*> m_vListeners;

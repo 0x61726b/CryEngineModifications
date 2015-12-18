@@ -107,8 +107,8 @@ public:
 					if(!crafting)
 						return;
 
-					m_BushCount = crafting->GetCraftableCount(ECraftableItems::Bush);
-					m_FlintstoneCount = crafting->GetCraftableCount(ECraftableItems::Flintstone);
+					m_BushCount = 0;
+					m_FlintstoneCount = 0;
 
 					ActivateOutput( &m_actInfo, eOUT_Bushes, m_BushCount );
 					ActivateOutput( &m_actInfo, eOUT_Flintstones, m_FlintstoneCount );
@@ -367,7 +367,82 @@ public:
 	SActivationInfo m_actInfo;
 };
 
+class CFlowNode_SetThirdPerson : public CFlowBaseNode<eNCT_Instanced>
+{
+	enum EInputPorts
+	{
+		eINP_Set = 0,
+	};
+
+	enum EOutputPorts
+	{
+		
+	};
+
+public:
+	CFlowNode_SetThirdPerson( SActivationInfo * pActInfo )
+	{
+
+	}
+
+	virtual void GetMemoryUsage(ICrySizer * s) const
+	{
+		s->Add(*this);
+	}
+
+	CFlowNode_SetThirdPerson::~CFlowNode_SetThirdPerson() 
+	{
+		
+	}
+
+
+	virtual void GetConfiguration( SFlowNodeConfig &config )
+	{
+		static const SInputPortConfig inp_config[] = {
+			InputPortConfig_Void ("Set", _HELP("Set player third person mode")),
+			{0}
+		};
+		static const SOutputPortConfig out_config[] = {
+			{0}
+		};
+
+		config.sDescription = _HELP( "" );
+		config.pInputPorts = inp_config;
+		config.pOutputPorts = out_config;
+		config.SetCategory(EFLN_APPROVED);
+	}
+
+
+	virtual IFlowNodePtr Clone(SActivationInfo* pActInfo) { return new CFlowNode_SetThirdPerson(pActInfo); }
+
+
+	virtual void ProcessEvent( EFlowEvent event, SActivationInfo *pActInfo )
+	{
+		switch (event)
+		{
+		case eFE_Initialize:
+			{
+				m_actInfo = *pActInfo;
+				break;
+			}
+		case eFE_Activate:
+			{
+				if (IsPortActive( pActInfo, eINP_Set ))
+				{
+					CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+
+					pPlayer->SetThirdPerson(true,true);
+				}
+				break;
+			}
+		}
+	}
+
+
+	SActivationInfo m_actInfo;
+};
 REGISTER_FLOW_NODE( "Crafting:Inventory", CFlowNode_CraftSystemInventory );
 REGISTER_FLOW_NODE( "Crafting:Pickup", CFlowNode_CraftSystemPickup );
 REGISTER_FLOW_NODE( "HungerSystem:HungerEvents", CFlowNode_HungerEvents );
+REGISTER_FLOW_NODE( "Arken:SetThirdPerson", CFlowNode_SetThirdPerson );
 //--------------------------------------------------------------------

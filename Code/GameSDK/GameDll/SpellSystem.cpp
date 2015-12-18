@@ -60,7 +60,7 @@ void SpellSystem::Reset()
 
 void SpellSystem::OnSpellPressed(int SpellId)
 {
-	if(SpellId == Spells::ESpells::BuildFireCamp)
+	/*if(SpellId == Spells::ESpells::BuildFireCamp)
 	{
 		CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
 
@@ -73,8 +73,6 @@ void SpellSystem::OnSpellPressed(int SpellId)
 
 			fireCamp->OnPress();
 
-			ArkenUIController::Get()->SetObjectiveOne(pPlayer->GetCraftSystem()->GetCraftableCount(ECraftableItems::Bush),pPlayer->GetCraftSystem()->GetCraftableCount(ECraftableItems::Flintstone),true,true);
-
 			pPlayer->GetCraftSystem()->RemoveItems(f);
 
 			
@@ -82,7 +80,7 @@ void SpellSystem::OnSpellPressed(int SpellId)
 		delete f;
 
 
-	}
+	}*/
 }
 
 void SpellSystem::OnSpellReleased(int SpellId)
@@ -173,8 +171,6 @@ bool BuildFireCamp::OnSpellActivate()
 		currentSanity -= FIRECAMP_REQUIRED_SANITY;
 		CHungerSanityController::Get()->SetSanity( currentSanity );
 		ArkenUIController::Get()->SetManaOrb(currentSanity);
-		ArkenUIController::Get()->SetObjectiveOne(0,0,false,false);
-		ArkenUIController::Get()->SetObjectiveTwo(false,true);
 
 		return true;
 	}

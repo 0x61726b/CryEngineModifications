@@ -96,6 +96,7 @@ CPlayerInput::CPlayerInput( CPlayer * pPlayer ) :
 	m_pendingYawSnapAngle(0.0f),
 	m_bYawSnappingActive(false)
 {
+	SetIgnoreMouseInput(false);
 	m_pPlayer->GetGameObject()->CaptureActions(this);
 
 #if FREE_CAM_SPLINE_ENABLED
@@ -865,17 +866,15 @@ bool CPlayerInput::OnSkillOne(EntityId entityId, const ActionId& actionId, int a
 }
 bool CPlayerInput::OnActionAttack2(EntityId entityId, const ActionId& actionId, int activationMode, float value)
 {
+	//if(activationMode == eAAM_OnRelease)
+	//{
+	//	m_pPlayer->GetSpellSystem()->OnRightClick();
+	//}
+	//return false;
 	if(activationMode == eAAM_OnRelease)
 	{
-		m_pPlayer->GetSpellSystem()->OnRightClick();
-	}
-	return false;
-}
-bool CPlayerInput::OnActionAttack(EntityId entityId, const ActionId& actionId, int activationMode, float value)
-{
-
-	if(activationMode == eAAM_OnRelease)
-	{
+		if(ignoreMouseInput)
+			return false;
 		m_bMoving = true;
 		m_Destination = mouseDestination;
 
@@ -914,8 +913,9 @@ bool CPlayerInput::OnActionAttack(EntityId entityId, const ActionId& actionId, i
 		if(!m_pPlayer->GetSpellSystem()->OnLeftClick())
 			m_pPlayer->m_pMovementController->RequestMovement( request ); //Dont move if using a spell at a location
 
-
 		
+		
+
 	}
 	else
 	{
@@ -925,6 +925,10 @@ bool CPlayerInput::OnActionAttack(EntityId entityId, const ActionId& actionId, i
 	}
 
 	return true;
+}
+bool CPlayerInput::OnActionAttack(EntityId entityId, const ActionId& actionId, int activationMode, float value)
+{
+	return false;
 }
 
 void CPlayerInput::PreUpdateEx()
@@ -1009,7 +1013,7 @@ void CPlayerInput::CalculateDestination()
 	ray_hit hit;
 	const unsigned int flags = rwi_stop_at_pierceable|rwi_colltype_any;
 
-	if (gEnv->pPhysicalWorld && gEnv->pPhysicalWorld->RayWorldIntersection(vPos0, vDir *  gEnv->p3DEngine->GetMaxViewDistance(), ent_terrain, flags, &hit, 1))
+	if (gEnv->pPhysicalWorld && gEnv->pPhysicalWorld->RayWorldIntersection(vPos0, vDir *  gEnv->p3DEngine->GetMaxViewDistance(), ent_all, flags, &hit, 1))
 	{
 		mouseDestination = hit.pt;
 		if(hit.pCollider)

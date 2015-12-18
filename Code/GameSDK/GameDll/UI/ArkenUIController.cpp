@@ -26,6 +26,7 @@ History:
 
 #include "StdAfx.h"
 #include "ArkenUIController.h"
+#include "CraftSystem.h"
 
 ArkenUIController* gArkenUIInstance = NULL;
 
@@ -40,10 +41,12 @@ ArkenUIController::ArkenUIController()
 	{
 		m_pArkenUI = gEnv->pFlashUI->GetUIElement( "ArkenUI" );
 		m_pSkillbar = gEnv->pFlashUI->GetUIElement( "ArkenSkillbar" );
+		m_pCraftMenu = gEnv->pFlashUI->GetUIElement( "ArkenCraftMenu" );
 		if ( m_pArkenUI )
 		{
 			m_pArkenUI->AddEventListener( this, "ArkenUI" );
 			m_pSkillbar->AddEventListener( this, "ArkenSkillbar" );
+			m_pCraftMenu->AddEventListener( this, "ArkenCraftMenu" );
 
 		}
 	}
@@ -54,35 +57,84 @@ ArkenUIController::~ArkenUIController()
 
 	if(m_pArkenUI)m_pArkenUI->RemoveEventListener(this);
 	if(m_pSkillbar)m_pSkillbar->RemoveEventListener(this);
+	if(m_pCraftMenu)m_pCraftMenu->RemoveEventListener(this);
 }
 
 ArkenUIController* ArkenUIController::Get()
 {
 	return gArkenUIInstance;
 }
-
-void ArkenUIController::SetBushText(const string& text)
+void ArkenUIController::BerryText(int v)
 {
 	SUIArguments args;
-	args.AddArgument( text );
+	args.AddArgument( v );
 
 	TUIData res;
 
-	m_pArkenUI->CallFunction( "SetBushText",args,&res );
-	m_pArkenUI->CallFunction( "BushHighlight",args,&res );
+	m_pArkenUI->CallFunction( "BerryText",args,&res );
 }
 
-void ArkenUIController::SetFlintText(const string& text)
+//////////////
+
+void ArkenUIController::BananaText(int v)
 {
 	SUIArguments args;
-	args.AddArgument( text );
+	args.AddArgument( v );
 
 	TUIData res;
 
-	m_pArkenUI->CallFunction( "SetFlintText",args,&res );
-	m_pArkenUI->CallFunction( "FlintHighlight",args,&res );
+	m_pArkenUI->CallFunction( "BananaText",args,&res );
 }
 
+//////////////
+
+void ArkenUIController::DurianText(int v)
+{
+	SUIArguments args;
+	args.AddArgument( v );
+
+	TUIData res;
+
+	m_pArkenUI->CallFunction( "DurianText",args,&res );
+}
+
+//////////////
+
+void ArkenUIController::WatermelonText(int v)
+{
+	SUIArguments args;
+	args.AddArgument( v );
+
+	TUIData res;
+
+	m_pArkenUI->CallFunction( "WatermelonText",args,&res );
+}
+
+//////////////
+
+void ArkenUIController::PomegranateText(int v)
+{
+	SUIArguments args;
+	args.AddArgument( v );
+
+	TUIData res;
+
+	m_pArkenUI->CallFunction( "PomegranateText",args,&res );
+}
+
+//////////////
+
+void ArkenUIController::DragonFruitText(int v)
+{
+	SUIArguments args;
+	args.AddArgument( v );
+
+	TUIData res;
+
+	m_pArkenUI->CallFunction( "DragonFruitText",args,&res );
+}
+
+//////////////
 void ArkenUIController::SetHealthOrb(int percent)
 {
 	SUIArguments args;
@@ -163,7 +215,7 @@ void ArkenUIController::SetObjectiveTwo(bool p1,bool p4)
 
 
 	TUIData res;
-	
+
 	m_pArkenUI->CallFunction( "SetObjectiveTwo",args,&res );
 
 	SetObjectiveOne(0,0,false,false);
@@ -172,5 +224,26 @@ void ArkenUIController::SetObjectiveTwo(bool p1,bool p4)
 }
 void ArkenUIController::OnUIEvent( IUIElement* pSender, const SUIEventDesc& event, const SUIArguments& args )
 {
+	if(strcmp(event.sName,"onButtonClicked") == 0)
+	{
+		/*CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+		pPlayer->GetPlayerInput()->SetIgnoreMouseInput(false);*/
 
+		TUIData list = args.GetArg(0);
+		string str;
+		list.GetValueWithConversion<string>(str);
+
+		if(strcmp(str,"First") == 0)
+		{
+			CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+
+			pPlayer->GetCraftSystem()->Craft("Pie");
+		}
+		int x = 0;
+	}
+	if(event.sDisplayName== "OnButtonRollOver")
+	{
+		//CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+		//pPlayer->GetPlayerInput()->SetIgnoreMouseInput(true);
+	}
 }

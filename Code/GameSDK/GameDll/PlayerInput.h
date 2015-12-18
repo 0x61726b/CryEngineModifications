@@ -268,6 +268,7 @@ private:
 	Vec3 mouseDestination;
 	Vec3 m_startPos;
 	bool m_bMoving;
+
 	bool m_bForceFinishAsTooNear;
 	float m_lastFrameTime;
 	float m_startTime;

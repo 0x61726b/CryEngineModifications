@@ -29,47 +29,6 @@ History:
 #include "UI/ArkenUIController.h"
 //-------------------------------------------------------------------------
 
-
-IProduct::IProduct()
-	: m_pEntity(NULL)
-{
-
-}
-
-
-IProduct::~IProduct()
-{
-
-}
-
-
-std::map<ECraftableItems,int> IProduct::GetRequiredItemList()
-{
-	return m_vRequires;
-}
-
-namespace Products
-{
-	Fire::Fire()
-	{
-
-	}
-
-	void Fire::SetRules()
-	{
-		m_vRequires.insert(std::make_pair(ECraftableItems::Bush,3));
-		m_vRequires.insert(std::make_pair(ECraftableItems::Flintstone,1));
-	}
-	void Fire::SetEntity()
-	{
-
-	}
-	void Fire::Spawn()
-	{
-
-	}
-}
-
 CraftSystem::CraftSystem()
 {
 	if ( gEnv->pFlashUI )
@@ -95,7 +54,9 @@ void CraftSystem::AddItem(ICraftable* item)
 	Because when the player picks the item,its instance will be deleted via entity system and the pointer will point to NULL
 	which will lead to crash when trying to access it
 	*/
-	ICraftable* copy = new ICraftable(item->GetType());
+	ICraftable* copy = new ICraftable;
+	copy->SetItemDropType(item->GetItemDropType());
+	copy->SetType(item->GetType());
 
 	m_vInventory.push_back(copy);
 
@@ -106,93 +67,66 @@ void CraftSystem::AddItem(ICraftable* item)
 	UpdateUI();
 }
 
-void CraftSystem::RemoveItem(ICraftable* item)
+bool CraftSystem::MakeItem1()
 {
-	std::vector<ICraftable*>::iterator It = std::find(m_vInventory.begin(),m_vInventory.end(),item);
+	//First item on the menu
+	//Pie
+	EItemDrops requiredItem1 = EItemDrops::Berry;
+	int		   Quantity1	 = 3;
+	int		   RegensFor	 = 20;
 
-	if(It != m_vInventory.end())
+	int iOk = GetCraftableCount(requiredItem1);
+
+	if(iOk >= Quantity1)
 	{
-		m_vInventory.erase(It);
+		RemoveItems(requiredItem1,Quantity1);
+
+		CHungerSanityController::Get()->SetHunger( CHungerSanityController::Get()->GetHunger() + RegensFor);
 	}
+
+	return iOk == Quantity1;
 }
-bool CraftSystem::HasRequiredItems(IProduct* p)
+
+void CraftSystem::Craft(const string& str)
 {
-	IProduct::CraftingRules rules = p->GetRequiredItemList();
-
-	IProduct::CraftingRules::iterator It = rules.begin();
-
-	bool ok = true;
-	for(It; It != rules.end(); ++It)
+	if(strcmp(str,"Pie") == 0)
 	{
-		ECraftableItems item = It->first;
-		int quantity		 = It->second;
-
-		int count = 0;
-		for(int i=0; i < m_vInventory.size(); ++i)
+		if(!MakeItem1())
 		{
-			ICraftable* craftable = m_vInventory.at(i);
-
-			if(craftable->GetType() == item)
-				count++;
+			//Display error
 		}
-		if(quantity < count)
-			ok = false;
-	}
-	return ok;
-}
-void CraftSystem::TryCraft(EProducts product)
-{
-	switch(product)
-	{
-	case EProducts::Fire:
+		else
 		{
-			Products::Fire* fire = new Products::Fire;
 
-			if(HasRequiredItems(fire))
-				fire->Spawn();
-			else
-				delete fire;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-void CraftSystem::RemoveItems(IProduct* p)
-{
-	IProduct::CraftingRules rules = p->GetRequiredItemList();
-
-	IProduct::CraftingRules::iterator It = rules.begin();
-
-	bool ok = true;
-	for(It; It != rules.end(); ++It)
-	{
-		ECraftableItems item = It->first;
-		int quantity		 = It->second;
-
-		for(int i=0; i < m_vInventory.size(); ++i)
-		{
-			ICraftable* craftable = m_vInventory.at(i);
-
-			std::vector<ICraftable*>::iterator it = std::find(m_vInventory.begin(),m_vInventory.end(),craftable);
-
-			if(it != m_vInventory.end())
-				m_vInventory.erase(it);
 		}
 	}
-
-	UpdateUI();
 }
 
 
-int CraftSystem::GetCraftableCount(ECraftableItems c)
+std::vector<ICraftable*> CraftSystem::GetCraftableOfType(EItemDrops e)
+{
+	m_vTempList.clear();
+	for(int i=0; i < m_vInventory.size(); ++i)
+	{
+		if(m_vInventory.at(i)->GetItemDropType() == e)
+		{
+			m_vTempList.push_back(m_vInventory[i]);
+		}
+	}
+	return m_vTempList;
+}
+
+
+int CraftSystem::GetCraftableCount(EItemDrops c)
 {
 	int count = 0;
 	for(int i=0; i < m_vInventory.size(); ++i)
 	{
-		if(m_vInventory.at(i)->GetType() == c)
+		if(m_vInventory.at(i)->GetItemDropType() == c)
+		{
 			count++;
+		}
+
 	}
 	return count;
 }
@@ -213,6 +147,28 @@ void CraftSystem::RemoveListener(CraftSystemListener* listener)
 	{
 		m_vListeners.erase(It);
 	}
+}
+
+void CraftSystem::RemoveItems(EItemDrops e,int count)
+{
+	std::vector<int> temp;
+
+	std::vector<ICraftable*>::iterator It;
+
+	for(It = m_vInventory.begin();It != m_vInventory.end();)
+	{
+		if((*It)->GetItemDropType() == e)
+		{
+			It = m_vInventory.erase(It);
+		}
+		else
+		{
+			++It;
+		}
+	}
+
+
+	UpdateUI();
 }
 
 void CraftSystem::OnUIEvent( IUIElement* pSender, const SUIEventDesc& event, const SUIArguments& args )
@@ -242,28 +198,20 @@ void CraftSystem::UpdateUI()
 
 		if( pArkenUI )
 		{
-			for(int i=0; i < m_vInventory.size(); ++i)
-			{
-				ICraftable* item = m_vInventory.at(i);
+			int qBerry = GetCraftableCount(EItemDrops::Berry);
+			int qBanana = GetCraftableCount(EItemDrops::Banana);
+			int qDragonFruit = GetCraftableCount(EItemDrops::DragonFruit);
+			int qDurian = GetCraftableCount(EItemDrops::Durian);
+			int qPomegranate = GetCraftableCount(EItemDrops::Pomegranate);
+			int qWatermelon = GetCraftableCount(EItemDrops::Watermelon);
 
-				switch(item->GetType())
-				{
-				case ECraftableItems::Bush:
-					{
-						ArkenUIController::Get()->SetBushText( ToString(GetCraftableCount(item->GetType())) );
-						
-					}
-					break;
-				case ECraftableItems::Flintstone:
-					{
-						ArkenUIController::Get()->SetFlintText( ToString(GetCraftableCount(item->GetType())) );
-					}
-					break;
-				default:
-					break;
-				}
-			}
+			ArkenUIController* pArkenUICtrl = ArkenUIController::Get();
+			pArkenUICtrl->BerryText(qBerry);
+			pArkenUICtrl->BananaText(qBanana);
+			pArkenUICtrl->DragonFruitText(qDragonFruit);
+			pArkenUICtrl->DurianText(qDurian);
+			pArkenUICtrl->PomegranateText(qPomegranate);
+			pArkenUICtrl->WatermelonText(qWatermelon);
 		}
-		ArkenUIController::Get()->SetObjectiveOne(GetCraftableCount(ECraftableItems::Bush),GetCraftableCount(ECraftableItems::Flintstone),false,true);
 	}
 }

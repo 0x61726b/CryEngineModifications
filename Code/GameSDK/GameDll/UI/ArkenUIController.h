@@ -39,8 +39,13 @@ public:
 	static ArkenUIController* Get();
 
 
-	void SetBushText(const string&);
-	void SetFlintText(const string&);
+	void BerryText(int);
+	void BananaText(int);
+	void DurianText(int);
+	void WatermelonText(int);
+	void DragonFruitText(int);
+	void PomegranateText(int);
+
 
 	void SetHealthOrb(int percent);
 	void SetManaOrb(int percent);
@@ -53,6 +58,8 @@ public:
 
 	void SetObjectiveOne(int p11,int p21,bool p3,bool p4);
 	void SetObjectiveTwo(bool p1,bool p4);
+
+	
 	
 	//IUIElementEventListener
 	void OnUIEvent( IUIElement* pSender, const SUIEventDesc& event, const SUIArguments& args );
@@ -60,7 +67,7 @@ public:
 
 	IUIElement* m_pArkenUI;
 	IUIElement* m_pSkillbar;
-
+	IUIElement* m_pCraftMenu;
 	bool obj2;
 
 };

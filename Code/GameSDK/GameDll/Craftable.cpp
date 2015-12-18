@@ -42,6 +42,10 @@ void CCraftable::SProperties::InitFromScript(const IEntity& entity)
 		{
 			propertiesTable->GetValue("object_Model",m_Model);
 			propertiesTable->GetValue("fScale",m_Scale);
+			propertiesTable->GetValue("audioTriggerPlayTrigger",m_ItemCollectSoundTriggerID);
+			propertiesTable->GetValue("iDrops",m_Drop);
+			propertiesTable->GetValue("iType",m_Type);
+			propertiesTable->GetValue("iHealthBonus",m_HealthBonus);
 		}
 	}
 
@@ -68,9 +72,29 @@ CCraftable::~CCraftable()
 //---------------------------------------------------------------------
 void CCraftable::Spawn()
 {
-	GetEntity()->SetScale(Vec3(m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale));
-	GetEntity()->LoadGeometry(0, m_ScriptsProps.m_Model); 
+	IEntity* pEntity = GetEntity();
 
+	pEntity->SetScale(Vec3(m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale));
+	pEntity->LoadGeometry(0, m_ScriptsProps.m_Model); 
+
+
+	IAudioSystem* pAudioSystem = gEnv->pAudioSystem;
+	TAudioControlID id = pAudioSystem->GetAudioTriggerID(m_ScriptsProps.m_ItemCollectSoundTriggerID,m_audioControlIDs[eSID_Collect]);
+
+	IEntityProxy* pProxy = pEntity->GetProxy(ENTITY_PROXY_AUDIO);
+	if (!pProxy)
+	{
+		if (pEntity->CreateProxy(ENTITY_PROXY_AUDIO))
+			pProxy = pEntity->GetProxy(ENTITY_PROXY_AUDIO);
+	}
+
+	m_pEntityAudioProxy = (IEntityAudioProxy*)pProxy;
+
+	if (m_pEntityAudioProxy == 0)
+		return;
+
+
+	m_pAudioProxyId = m_pEntityAudioProxy->CreateAuxAudioProxy();
 
 
 	//Create trigger area
@@ -94,7 +118,7 @@ void CCraftable::Spawn()
 
 
 
-
+	
 }
 //---------------------------------------------------------------------
 bool CCraftable::Init( IGameObject * pGameObject )
@@ -133,29 +157,20 @@ void CCraftable::ProcessEvent( SEntityEvent &event)
 			{
 				CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
 
-				if(!pPlayer)
-					return;
-				CCraftableBush* bush = static_cast<CCraftableBush*>(this);
-				CCraftableFlintstone* flintstone = static_cast<CCraftableFlintstone*>(this);
+				pPlayer->GetCraftSystem()->AddItem(this);
 
-				bool collected = false;
+				//We're done with this entity
+				gEnv->pEntitySystem->RemoveEntity(GetEntity()->GetId());
 
-				if(bush)
-				{
-					pPlayer->GetCraftSystem()->AddItem(bush);
-					collected = true;
-				} else if(flintstone)
-				{
-					pPlayer->GetCraftSystem()->AddItem(flintstone);
-					collected = true;
-				}
+				m_pEntityAudioProxy->ExecuteTrigger(m_audioControlIDs[eSID_Collect],eLSM_None,m_pAudioProxyId);
 
+				/*pPlayer->SetThirdPerson(false,true);
+				pPlayer->Kill();
 
-				if(collected)
-				{
-					//We're done with this entity
-					gEnv->pEntitySystem->RemoveEntity(GetEntity()->GetId());
-				}
+				CryFixedStringT<256> command;
+				command.Format("map %s nb", gEnv->pGame->GetIGameFramework()->GetLevelName());
+				gEnv->pConsole->ExecuteString(command.c_str());*/
+
 			}
 
 			break;
@@ -228,6 +243,11 @@ void CCraftable::Reset()
 {
 	m_ScriptsProps.InitFromScript(*GetEntity());
 
+	SetItemDropType((EItemDrops)m_ScriptsProps.m_Drop);
+	SetType((ECraftableItems)m_ScriptsProps.m_Type);
+	
+
+
 	GetEntity()->SetScale(Vec3(m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale)); //for some reason..
 }
 //---------------------------------------------------------------------//
@@ -239,26 +259,6 @@ void CCraftable::PostSerialize()
 {
 }
 //---------------------------------------------------------------------//
-
-CCraftableBush::CCraftableBush()
-	: ICraftable(ECraftableItems::Bush)
-{
-
-}
-CCraftableBush::~CCraftableBush()
-{
-
-}
-
-CCraftableFlintstone::CCraftableFlintstone()
-	: ICraftable(ECraftableItems::Flintstone)
-{
-
-}
-CCraftableFlintstone::~CCraftableFlintstone()
-{
-
-}
 
 
 
