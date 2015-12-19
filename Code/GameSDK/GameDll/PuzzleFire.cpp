@@ -66,7 +66,8 @@ void CPuzzleFire::SProperties::InitFromScript(const IEntity& entity)
 }
 //---------------------------------------------------------------------
 CPuzzleFire::CPuzzleFire()
-	: m_bCanInteract(false)
+	: m_bCanInteract(false),
+	m_pPuzzleController(NULL)
 {
 	gEnv->pInput->AddEventListener(this);
 }
@@ -195,6 +196,10 @@ bool CPuzzleFire::Init( IGameObject * pGameObject )
 {
 	SetGameObject(pGameObject);
 
+
+
+
+
 	return true;
 }
 //---------------------------------------------------------------------
@@ -252,6 +257,29 @@ void CPuzzleFire::ProcessEvent( SEntityEvent &event)
 			}
 			break;
 		}
+	case ENTITY_EVENT_CUSTOM_TURNOFFLIGHTS:
+		{
+			SwitchLights(false);
+			break;
+		}
+	case ENTITY_EVENT_CUSTOM_TURNONLIGHTS:
+		{
+			SwitchLights(true);
+			break;
+		}
+	case ENTITY_EVENT_CUSTOM_SETOWNER:
+		{
+			m_pPuzzleController = (IEntity*)event.nParam[0];
+			if(m_pPuzzleController)
+			{
+				SEntityEvent event1;
+				event1.event = ENTITY_EVENT_CUSTOM_NOTIFYOWNER;
+				event1.nParam[0] = (INT_PTR)this->GetEntity()->GetId();
+				event1.nParam[1] = (INT_PTR)m_ScriptsProps.m_bActive;
+				m_pPuzzleController->SendEvent(event1);
+			}
+			break;
+		}
 	default:
 		break;
 	}
@@ -265,9 +293,38 @@ void CPuzzleFire::ProcessEvent( SEntityEvent &event)
 	}
 }
 //--------------------------------------------------------------------
+void CPuzzleFire::SwitchLights(bool b)
+{
+	if(!b)
+	{
+		m_pEntityAudioProxy->ExecuteTrigger(m_audioControlIDs[eSID_SwitchOff],eLSM_None,m_pAudioProxyId);
+
+		m_pPointLight->Hide(true);
+		m_pLight->Hide(true);
+		SEntityEvent evt;
+		evt.event = ENTITY_EVENT_CUSTOM_NOTIFYOWNER;
+		evt.nParam[0] = (INT_PTR)this->GetEntity()->GetId();
+		evt.nParam[1] = (INT_PTR)false;
+		m_pPuzzleController->SendEvent( evt );
+	}
+	else
+	{
+		m_pEntityAudioProxy->ExecuteTrigger(m_audioControlIDs[eSID_SwitchOff],eLSM_None,m_pAudioProxyId);
+
+		m_pPointLight->Hide(false);
+		m_pLight->Hide(false);
+
+		SEntityEvent evt;
+		evt.event = ENTITY_EVENT_CUSTOM_NOTIFYOWNER;
+		evt.nParam[0] = (INT_PTR)this->GetEntity()->GetId();
+		evt.nParam[1] =(INT_PTR)true;
+		m_pPuzzleController->SendEvent( evt );
+	}
+}
+//--------------------------------------------------------------------
 void CPuzzleFire::Update( SEntityUpdateContext& ctx, int updateSlot )
 {
-	
+
 }
 //--------------------------------------------------------------------
 bool CPuzzleFire::OnInputEvent( const SInputEvent &event )
@@ -281,18 +338,12 @@ bool CPuzzleFire::OnInputEvent( const SInputEvent &event )
 				bool bOk = m_ScriptsProps.m_bActive;
 				if(m_ScriptsProps.m_bActive)
 				{
-					m_pEntityAudioProxy->ExecuteTrigger(m_audioControlIDs[eSID_SwitchOff],eLSM_None,m_pAudioProxyId);
-
-					m_pPointLight->Hide(true);
-					m_pLight->Hide(true);
+					SwitchLights(false);
 					bOk = false;
 				}
 				else
 				{
-					m_pEntityAudioProxy->ExecuteTrigger(m_audioControlIDs[eSID_SwitchOff],eLSM_None,m_pAudioProxyId);
-
-					m_pPointLight->Hide(false);
-					m_pLight->Hide(false);
+					SwitchLights(true);
 					bOk = true;
 				}
 				m_ScriptsProps.m_bActive = bOk;

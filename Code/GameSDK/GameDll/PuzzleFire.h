@@ -121,6 +121,7 @@ private:
 	void Reset();
 	void Spawn();
 
+	void SwitchLights(bool b);
 	bool m_bCanInteract;
 	ILightSource*	m_pLight;
 	ILightSource*	m_pPointLight;
@@ -131,7 +132,7 @@ private:
 
 	TAudioProxyID m_pAudioProxyId;
 
-	CPlayer* m_pPlayer;
+	IEntity* m_pPuzzleController;
 };
 
 #endif
