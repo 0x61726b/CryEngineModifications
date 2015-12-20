@@ -37,10 +37,12 @@ class CCraftable : public CGameObjectExtensionHelper<CCraftable, IGameObjectExte
 		SProperties()
 			: m_Model(""),
 			m_ItemCollectSoundTriggerID(""),
+			m_ParticleFx(""),
 			m_Scale(1),
 			m_Drop(-1),
 			m_Type(-1),
-			m_HealthBonus(0)
+			m_HealthBonus(0),
+			m_ParticleRot(Vec3(0,0,0))
 		{
 
 		}
@@ -52,6 +54,8 @@ class CCraftable : public CGameObjectExtensionHelper<CCraftable, IGameObjectExte
 		int			m_Type;
 		int			m_HealthBonus;
 		float m_Scale;
+		char*		m_ParticleFx;
+		Vec3		m_ParticleRot;
 	};
 	enum ECraftableItemSounds
 	{

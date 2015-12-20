@@ -120,9 +120,6 @@ void CCampfire::Spawn()
 		gEnv->pLog->Log("%s: Warning: Trigger Area Has Bad Params", GetEntity()->GetName());
 	}
 
-
-
-
 }
 //---------------------------------------------------------------------
 bool CCampfire::Init( IGameObject * pGameObject )

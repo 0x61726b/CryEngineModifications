@@ -263,6 +263,7 @@ class CFlowNode_HungerEvents : public CFlowBaseNode<eNCT_Instanced>,public IHung
 	enum EOutputPorts
 	{
 		eOUT_OnHungerReachZero = 0,
+		eOUT_OnSanityReachZero
 	};
 
 public:
@@ -301,6 +302,7 @@ public:
 		};
 		static const SOutputPortConfig out_config[] = {
 			OutputPortConfig_Void("OnHungerReachZero"),
+			OutputPortConfig_Void("OnSanityReachZero"),
 			{0}
 		};
 
@@ -360,7 +362,12 @@ public:
 
 	virtual void OnSanityChanged()
 	{
+		CHungerSanityController* hungerSystem = CHungerSanityController::Get();
 
+		if(hungerSystem->GetSanity() <= 0)
+		{
+			ActivateOutput(&m_actInfo, eOUT_OnSanityReachZero, true );
+		}
 	}
 
 
@@ -376,7 +383,7 @@ class CFlowNode_SetThirdPerson : public CFlowBaseNode<eNCT_Instanced>
 
 	enum EOutputPorts
 	{
-		
+
 	};
 
 public:
@@ -392,7 +399,7 @@ public:
 
 	CFlowNode_SetThirdPerson::~CFlowNode_SetThirdPerson() 
 	{
-		
+
 	}
 
 
@@ -441,8 +448,86 @@ public:
 
 	SActivationInfo m_actInfo;
 };
+
+
+class CFlowNode_KillPlayer : public CFlowBaseNode<eNCT_Instanced>
+{
+	enum EInputPorts
+	{
+		eINP_Set = 0,
+	};
+
+	enum EOutputPorts
+	{
+
+	};
+
+public:
+	CFlowNode_KillPlayer( SActivationInfo * pActInfo )
+	{
+
+	}
+
+	virtual void GetMemoryUsage(ICrySizer * s) const
+	{
+		s->Add(*this);
+	}
+
+	CFlowNode_KillPlayer::~CFlowNode_KillPlayer() 
+	{
+
+	}
+
+
+	virtual void GetConfiguration( SFlowNodeConfig &config )
+	{
+		static const SInputPortConfig inp_config[] = {
+			InputPortConfig_Void ("Set", _HELP("Set player third person mode")),
+			{0}
+		};
+		static const SOutputPortConfig out_config[] = {
+			{0}
+		};
+
+		config.sDescription = _HELP( "" );
+		config.pInputPorts = inp_config;
+		config.pOutputPorts = out_config;
+		config.SetCategory(EFLN_APPROVED);
+	}
+
+
+	virtual IFlowNodePtr Clone(SActivationInfo* pActInfo) { return new CFlowNode_KillPlayer(pActInfo); }
+
+
+	virtual void ProcessEvent( EFlowEvent event, SActivationInfo *pActInfo )
+	{
+		switch (event)
+		{
+		case eFE_Initialize:
+			{
+				m_actInfo = *pActInfo;
+				break;
+			}
+		case eFE_Activate:
+			{
+				if (IsPortActive( pActInfo, eINP_Set ))
+				{
+					CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+
+					pPlayer->SetThirdPerson(false,true);
+					pPlayer->Kill();
+				}
+				break;
+			}
+		}
+	}
+
+
+	SActivationInfo m_actInfo;
+};
 REGISTER_FLOW_NODE( "Crafting:Inventory", CFlowNode_CraftSystemInventory );
 REGISTER_FLOW_NODE( "Crafting:Pickup", CFlowNode_CraftSystemPickup );
 REGISTER_FLOW_NODE( "HungerSystem:HungerEvents", CFlowNode_HungerEvents );
 REGISTER_FLOW_NODE( "Arken:SetThirdPerson", CFlowNode_SetThirdPerson );
+REGISTER_FLOW_NODE( "Arken:KillPlayer", CFlowNode_KillPlayer );
 //--------------------------------------------------------------------

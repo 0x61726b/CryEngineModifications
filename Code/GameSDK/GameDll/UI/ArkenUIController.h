@@ -59,6 +59,9 @@ public:
 	void SetObjectiveOne(int p11,int p21,bool p3,bool p4);
 	void SetObjectiveTwo(bool p1,bool p4);
 
+	void HideAll();
+	void ShowAll();
+	
 	
 	
 	//IUIElementEventListener

@@ -72,8 +72,8 @@ bool CraftSystem::MakeItem1()
 	//First item on the menu
 	//Pie
 	EItemDrops requiredItem1 = EItemDrops::Berry;
-	int		   Quantity1	 = 3;
-	int		   RegensFor	 = 20;
+	int		   Quantity1	 = 2;
+	int		   RegensFor	 = 40;
 
 	int iOk = GetCraftableCount(requiredItem1);
 

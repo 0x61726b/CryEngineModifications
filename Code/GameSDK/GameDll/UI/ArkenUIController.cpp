@@ -64,6 +64,25 @@ ArkenUIController* ArkenUIController::Get()
 {
 	return gArkenUIInstance;
 }
+
+void ArkenUIController::HideAll()
+{
+
+	m_pArkenUI->SetVisible(false);
+
+	m_pSkillbar->SetVisible(false);
+
+	m_pCraftMenu->SetVisible(false);
+}
+void ArkenUIController::ShowAll()
+{
+
+	m_pArkenUI->SetVisible(true);
+
+	m_pSkillbar->SetVisible(true);
+
+	m_pCraftMenu->SetVisible(true);
+}
 void ArkenUIController::BerryText(int v)
 {
 	SUIArguments args;

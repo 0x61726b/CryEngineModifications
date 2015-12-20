@@ -46,6 +46,8 @@ void CCraftable::SProperties::InitFromScript(const IEntity& entity)
 			propertiesTable->GetValue("iDrops",m_Drop);
 			propertiesTable->GetValue("iType",m_Type);
 			propertiesTable->GetValue("iHealthBonus",m_HealthBonus);
+			propertiesTable->GetValue("particle_Fx",m_ParticleFx);
+			propertiesTable->GetValue("vParticleRot",m_ParticleRot);
 		}
 	}
 
@@ -116,9 +118,44 @@ void CCraftable::Spawn()
 		gEnv->pLog->Log("%s: Warning: Trigger Area Has Bad Params", GetEntity()->GetName());
 	}
 
+	//Create particle effect
+	CItemParticleEffectCache& particleCache = g_pGame->GetGameSharedParametersStorage()->GetItemResourceCache().GetParticleEffectCache();
+	particleCache.CacheParticle(m_ScriptsProps.m_ParticleFx);
 
 
-	
+
+	//Get the effect from the cache
+	IParticleEffect* pParticleEffect = particleCache.GetCachedParticle(m_ScriptsProps.m_ParticleFx);
+
+	if(GetEntity()->GetParticleEmitter(0))
+	{
+		gEnv->pParticleManager->DeleteEmitter(GetEntity()->GetParticleEmitter(0));
+	}
+
+	if (pParticleEffect)
+	{
+		//Matrix34 loc;
+		//loc.SetIdentity();
+		//loc.SetTranslation(entityPos);
+		////spawn the effect
+		//m_pParticleEffect = pParticleEffect->Spawn(false, loc);
+
+		GetEntity()->LoadParticleEmitter(1,pParticleEffect);
+		
+		IParticleEmitter* pEmitter = GetEntity()->GetParticleEmitter(1);
+
+		
+		if(pEmitter)
+		{
+			Matrix34 loc;
+			loc.SetRotationX( (float)g_PI * ( m_ScriptsProps.m_ParticleRot.x / 180.0f ));
+			loc.SetRotationY( (float)g_PI * ( m_ScriptsProps.m_ParticleRot.y / 180.0f ));
+			loc.SetRotationZ( (float)g_PI * ( m_ScriptsProps.m_ParticleRot.z / 180.0f ));
+			GetEntity()->SetSlotLocalTM(1,loc);
+		}
+	}
+
+
 }
 //---------------------------------------------------------------------
 bool CCraftable::Init( IGameObject * pGameObject )
@@ -245,7 +282,7 @@ void CCraftable::Reset()
 
 	SetItemDropType((EItemDrops)m_ScriptsProps.m_Drop);
 	SetType((ECraftableItems)m_ScriptsProps.m_Type);
-	
+
 
 
 	GetEntity()->SetScale(Vec3(m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale,m_ScriptsProps.m_Scale)); //for some reason..

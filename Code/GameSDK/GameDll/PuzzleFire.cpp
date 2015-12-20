@@ -190,6 +190,36 @@ void CPuzzleFire::Spawn()
 
 
 	m_pAudioProxyId = m_pEntityAudioProxy->CreateAuxAudioProxy();
+
+	m_pPointLight->Hide( !m_ScriptsProps.m_bActive );
+	m_pLight->Hide( !m_ScriptsProps.m_bActive );
+
+
+	//Particle FX
+	//Create particle effect
+	CItemParticleEffectCache& particleCache = g_pGame->GetGameSharedParametersStorage()->GetItemResourceCache().GetParticleEffectCache();
+	particleCache.CacheParticle("ArkenParticles.FX.ItemHighlight");
+
+
+
+	//Get the effect from the cache
+	IParticleEffect* pParticleEffect = particleCache.GetCachedParticle("ArkenParticles.FX.ItemHighlight");
+
+	if(GetEntity()->GetParticleEmitter(0))
+	{
+		gEnv->pParticleManager->DeleteEmitter(GetEntity()->GetParticleEmitter(1));
+	}
+
+	if (pParticleEffect)
+	{
+		//Matrix34 loc;
+		//loc.SetIdentity();
+		//loc.SetTranslation(entityPos);
+		////spawn the effect
+		//m_pParticleEffect = pParticleEffect->Spawn(false, loc);
+
+		GetEntity()->LoadParticleEmitter(1,pParticleEffect);
+	}
 }
 //---------------------------------------------------------------------
 bool CPuzzleFire::Init( IGameObject * pGameObject )
@@ -305,7 +335,7 @@ void CPuzzleFire::SwitchLights(bool b)
 		evt.event = ENTITY_EVENT_CUSTOM_NOTIFYOWNER;
 		evt.nParam[0] = (INT_PTR)this->GetEntity()->GetId();
 		evt.nParam[1] = (INT_PTR)false;
-		m_pPuzzleController->SendEvent( evt );
+		if(m_pPuzzleController)m_pPuzzleController->SendEvent( evt );
 	}
 	else
 	{
@@ -318,8 +348,9 @@ void CPuzzleFire::SwitchLights(bool b)
 		evt.event = ENTITY_EVENT_CUSTOM_NOTIFYOWNER;
 		evt.nParam[0] = (INT_PTR)this->GetEntity()->GetId();
 		evt.nParam[1] =(INT_PTR)true;
-		m_pPuzzleController->SendEvent( evt );
+		if(m_pPuzzleController)m_pPuzzleController->SendEvent( evt );
 	}
+	CHungerSanityController::Get()->SetSanity( CHungerSanityController::Get()->GetSanity() - 10 );
 }
 //--------------------------------------------------------------------
 void CPuzzleFire::Update( SEntityUpdateContext& ctx, int updateSlot )
