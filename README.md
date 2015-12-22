@@ -8,5 +8,7 @@ Changes to CryEngine 3 source code for own project.You can directly copy-paste t
 - Crafting system - Combine collectible items to make a new one with special effects [CraftSystem.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/CraftSystem.cpp)
 - Skill system [SpellSystem.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/SpellSystem.cpp)
 - Controller for updating skillbar and other UI elements [ArkenUIController.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/UI/ArkenUIController.cpp)
-- Custom actor with particles and proxy area for regenartion [Campfire.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/Campfire.cpp)
+- Gameplay Elements [Campfire.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/Campfire.cpp)
+  [PuzzleController.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/PuzzleController.cpp)
+  [Trap.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/Trap.cpp)
 - Custom Flow Nodes to compensate if flowgraph is absolutely needed(not really) [CraftSystemNodes.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/Nodes/CraftSystemNodes.cpp)
