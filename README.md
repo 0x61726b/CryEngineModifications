@@ -11,4 +11,5 @@ Changes to CryEngine 3 source code for own project.You can directly copy-paste t
 - Gameplay Elements [Campfire.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/Campfire.cpp)
   [PuzzleController.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/PuzzleController.cpp)
   [Trap.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/Trap.cpp)
+  [PuzzleFire.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/PuzzleFire.cpp)
 - Custom Flow Nodes to compensate if flowgraph is absolutely needed(not really) [CraftSystemNodes.cpp](https://github.com/arkenthera/CryEngineModifications/blob/master/Code/GameSDK/GameDll/Nodes/CraftSystemNodes.cpp)
