@@ -263,7 +263,9 @@ class CFlowNode_HungerEvents : public CFlowBaseNode<eNCT_Instanced>,public IHung
 	enum EOutputPorts
 	{
 		eOUT_OnHungerReachZero = 0,
-		eOUT_OnSanityReachZero
+		eOUT_OnSanityReachZero,
+		eOUT_OnStartSleeping,
+		eOUT_OnAwakeFromSleep
 	};
 
 public:
@@ -303,6 +305,8 @@ public:
 		static const SOutputPortConfig out_config[] = {
 			OutputPortConfig_Void("OnHungerReachZero"),
 			OutputPortConfig_Void("OnSanityReachZero"),
+			OutputPortConfig_Void("OnStartedSleeping"),
+			OutputPortConfig_Void("OnAwakeFromSleep"),
 			{0}
 		};
 
@@ -370,6 +374,22 @@ public:
 		}
 	}
 
+	virtual void OnAwake()
+	{
+		CHungerSanityController* hungerSystem = CHungerSanityController::Get();
+
+
+		ActivateOutput(&m_actInfo, eOUT_OnAwakeFromSleep, true );
+
+	}
+
+	virtual void OnStartSleeping()
+	{
+		CHungerSanityController* hungerSystem = CHungerSanityController::Get();
+
+
+		ActivateOutput(&m_actInfo, eOUT_OnStartSleeping, true );
+	}
 
 	SActivationInfo m_actInfo;
 };
@@ -525,9 +545,185 @@ public:
 
 	SActivationInfo m_actInfo;
 };
+
+class CFlowNode_SetHungerSanity : public CFlowBaseNode<eNCT_Instanced>
+{
+	enum EInputPorts
+	{
+		eINP_Set,
+		eINP_Hunger,
+		eINP_Sanity
+	};
+
+	enum EOutputPorts
+	{
+		eOUT_OnHungerChanged,
+		eOUT_OnSanityChanged
+	};
+
+public:
+	CFlowNode_SetHungerSanity( SActivationInfo * pActInfo )
+	{
+
+	}
+
+	virtual void GetMemoryUsage(ICrySizer * s) const
+	{
+		s->Add(*this);
+	}
+
+	CFlowNode_SetHungerSanity::~CFlowNode_SetHungerSanity() 
+	{
+
+	}
+
+
+	virtual void GetConfiguration( SFlowNodeConfig &config )
+	{
+		static const SInputPortConfig inp_config[] = {
+			InputPortConfig_Void("Set", _HELP("Set hunger")),
+			InputPortConfig<int>("Hunger", _HELP("Set hunger")),
+			InputPortConfig<int>("Sanity", _HELP("Set sanity")),
+			{0}
+		};
+		static const SOutputPortConfig out_config[] = {
+			OutputPortConfig_Void("OnHungerChanged"),
+			OutputPortConfig_Void("OnSanityChanged"),
+			{0}
+		};
+
+		config.sDescription = _HELP( "" );
+		config.pInputPorts = inp_config;
+		config.pOutputPorts = out_config;
+		config.SetCategory(EFLN_APPROVED);
+	}
+
+
+	virtual IFlowNodePtr Clone(SActivationInfo* pActInfo) { return new CFlowNode_SetHungerSanity(pActInfo); }
+
+
+	virtual void ProcessEvent( EFlowEvent event, SActivationInfo *pActInfo )
+	{
+		switch (event)
+		{
+		case eFE_Initialize:
+			{
+				m_actInfo = *pActInfo;
+				break;
+			}
+		case eFE_Activate:
+			{
+				if (IsPortActive( pActInfo, eINP_Set ))
+				{
+
+					CHungerSanityController::Get()->SetHunger(GetPortInt( pActInfo,eINP_Hunger ));
+
+					ActivateOutput( pActInfo,eOUT_OnHungerChanged,true);
+
+					CHungerSanityController::Get()->SetSanity(GetPortInt( pActInfo,eINP_Sanity ));
+
+					ActivateOutput( pActInfo,eOUT_OnSanityChanged,true);
+				}
+				break;
+			}
+		}
+	}
+
+
+	SActivationInfo m_actInfo;
+};
+
+
+class CFlowNode_ArkenUIHelper : public CFlowBaseNode<eNCT_Instanced>
+{
+	enum EInputPorts
+	{
+		eINP_HideAll = 0,
+		eINP_ShowAll,
+		eINP_OnlyOverlay
+	};
+
+	enum EOutputPorts
+	{
+
+	};
+
+public:
+	CFlowNode_ArkenUIHelper( SActivationInfo * pActInfo )
+	{
+
+	}
+
+	virtual void GetMemoryUsage(ICrySizer * s) const
+	{
+		s->Add(*this);
+	}
+
+	CFlowNode_ArkenUIHelper::~CFlowNode_ArkenUIHelper() 
+	{
+
+	}
+
+
+	virtual void GetConfiguration( SFlowNodeConfig &config )
+	{
+		static const SInputPortConfig inp_config[] = {
+			InputPortConfig_Void ("HideAll", _HELP("")),
+			InputPortConfig_Void ("ShowAll", _HELP("")),
+			InputPortConfig_Void ("Show only overlay", _HELP("")),
+			{0}
+		};
+		static const SOutputPortConfig out_config[] = {
+			{0}
+		};
+
+		config.sDescription = _HELP( "" );
+		config.pInputPorts = inp_config;
+		config.pOutputPorts = out_config;
+		config.SetCategory(EFLN_APPROVED);
+	}
+
+
+	virtual IFlowNodePtr Clone(SActivationInfo* pActInfo) { return new CFlowNode_ArkenUIHelper(pActInfo); }
+
+
+	virtual void ProcessEvent( EFlowEvent event, SActivationInfo *pActInfo )
+	{
+		switch (event)
+		{
+		case eFE_Initialize:
+			{
+				m_actInfo = *pActInfo;
+				break;
+			}
+		case eFE_Activate:
+			{
+				CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+				if (IsPortActive( pActInfo, eINP_ShowAll ))
+				{
+					g_pGame->GetUI()->GetArkenUI()->ShowAll();
+				}
+				if (IsPortActive( pActInfo, eINP_HideAll ))
+				{
+					g_pGame->GetUI()->GetArkenUI()->HideAll();
+				}
+				if (IsPortActive( pActInfo, eINP_OnlyOverlay ))
+				{
+					g_pGame->GetUI()->GetArkenUI()->ShowOnlyOverlay();
+				}
+				break;
+			}
+		}
+	}
+
+
+	SActivationInfo m_actInfo;
+};
 REGISTER_FLOW_NODE( "Crafting:Inventory", CFlowNode_CraftSystemInventory );
 REGISTER_FLOW_NODE( "Crafting:Pickup", CFlowNode_CraftSystemPickup );
 REGISTER_FLOW_NODE( "HungerSystem:HungerEvents", CFlowNode_HungerEvents );
 REGISTER_FLOW_NODE( "Arken:SetThirdPerson", CFlowNode_SetThirdPerson );
 REGISTER_FLOW_NODE( "Arken:KillPlayer", CFlowNode_KillPlayer );
+REGISTER_FLOW_NODE( "Arken:SetHungerSanity", CFlowNode_SetHungerSanity);
+REGISTER_FLOW_NODE( "Arken:ArkenUIHelper", CFlowNode_ArkenUIHelper);
 //--------------------------------------------------------------------

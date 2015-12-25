@@ -87,9 +87,10 @@ protected:
 	typedef std::vector<EntityId> OrderMap;
 	OrderMap m_Orders;
 	
-	typedef std::map<string,EntityId> LinkEntityMap;
+	typedef std::map<string,IEntity*> LinkEntityMap;
 	LinkEntityMap m_vLinks;
 
+	
 	bool m_C1;
 	bool m_C2;
 	bool m_C3;

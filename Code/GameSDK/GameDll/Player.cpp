@@ -152,7 +152,6 @@ History:
 #include <IHMDDevice.h>
 #include <IHMDManager.h>
 
-#include "UI/ArkenUIController.h"
 
 DEFINE_STATE_MACHINE( CPlayer, Movement ); 
 
@@ -547,7 +546,8 @@ CPlayer::CPlayer()
 	, m_fOxygenLevel(1.0f),
 	m_pCraftSystem(NULL),
 	m_pSpellSystem(NULL),
-	m_pHungerSystem(NULL)
+	m_pHungerSystem(NULL),
+	m_pAudioListener(NULL)
 {
 	m_pPlayerRotation = new CPlayerRotation(*this);
 	CRY_ASSERT( m_pPlayerRotation );
@@ -671,12 +671,10 @@ CPlayer::CPlayer()
 
 	m_netCloseCombatSnapTargetId = 0;
 
-	m_pHungerSystem = new CHungerSanityController;
-	m_pCraftSystem = new CraftSystem;
 
-	m_pSpellSystem = new SpellSystem;
-	m_pArkenUI = new ArkenUIController;
 
+
+	CreateAudioListener();
 }
 
 CPlayer::~CPlayer()
@@ -751,6 +749,7 @@ CPlayer::~CPlayer()
 	SAFE_DELETE( m_pCraftSystem );
 	SAFE_DELETE( m_pSpellSystem );
 
+
 	// Release effects after state machine (in case some state is trying to do something with them on exit)
 	m_hitRecoilGameEffect.Release();
 	m_playerHealthEffect.Release();
@@ -781,6 +780,71 @@ SpellSystem* CPlayer::GetSpellSystem()
 {
 	return m_pSpellSystem;
 }
+//arkenthera
+void CPlayer::CreateAudioListener()
+{
+	if (m_pAudioListener == nullptr)
+	{
+		SEntitySpawnParams oEntitySpawnParams;
+		oEntitySpawnParams.sName  = "AudioListener";
+		oEntitySpawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass("AudioListener");
+		m_pAudioListener = gEnv->pEntitySystem->SpawnEntity(oEntitySpawnParams, true);
+
+		if (m_pAudioListener != nullptr)
+		{
+			// We don't want the audio listener to serialize as the entity gets completely removed and recreated during save/load!
+			m_pAudioListener->SetFlags(m_pAudioListener->GetFlags() | (ENTITY_FLAG_TRIGGER_AREAS | ENTITY_FLAG_NO_SAVE));
+			m_pAudioListener->SetFlagsExtended(m_pAudioListener->GetFlagsExtended() | ENTITY_FLAG_EXTENDED_AUDIO_LISTENER);
+			gEnv->pEntitySystem->AddEntityEventListener(m_pAudioListener->GetId(), ENTITY_EVENT_DONE, this);
+			CryFixedStringT<64> sTemp;
+			sTemp.Format("AudioListener(%d)", static_cast<int>(m_pAudioListener->GetId()));
+			m_pAudioListener->SetName(sTemp.c_str());
+
+			IEntityAudioProxyPtr pIEntityAudioProxy = crycomponent_cast<IEntityAudioProxyPtr>(m_pAudioListener->CreateProxy(ENTITY_PROXY_AUDIO));
+			CRY_ASSERT(pIEntityAudioProxy.get());
+		}
+		else
+		{
+			CryFatalError("<Audio>: Audio listener creation failed in CView::CreateAudioListener!");
+		}
+	}
+	else
+	{
+		m_pAudioListener->SetFlagsExtended(m_pAudioListener->GetFlagsExtended() | ENTITY_FLAG_EXTENDED_AUDIO_LISTENER);
+		m_pAudioListener->InvalidateTM(ENTITY_XFORM_POS);
+	}
+}
+
+void CPlayer::OnEntityEvent( IEntity *pEntity,SEntityEvent &event )
+{
+	switch (event.event)
+	{
+	case ENTITY_EVENT_DONE:
+		{
+			// In case something destroys our listener entity before we had the chance to remove it.
+			if ((m_pAudioListener != nullptr) && (pEntity->GetId() == m_pAudioListener->GetId()))
+			{
+				gEnv->pEntitySystem->RemoveEntityEventListener(m_pAudioListener->GetId(), ENTITY_EVENT_DONE, this);
+				m_pAudioListener = nullptr;
+			}
+
+			break;
+		}
+	default:
+		{
+			break;
+		}
+	}
+}
+
+void CPlayer::UpdateAudioListener(Matrix34 const& matrix)
+{
+	if (m_pAudioListener != nullptr)
+	{
+		m_pAudioListener->SetWorldTM(matrix);
+	}
+}
+//~
 
 
 bool CPlayer::Init(IGameObject * pGameObject)
@@ -966,6 +1030,11 @@ bool CPlayer::Init(IGameObject * pGameObject)
 		StateMachineHandleEventMovement( PLAYER_EVENT_INTRO_START );
 	else
 		StateMachineHandleEventMovement( PLAYER_EVENT_INTRO_FINISHED );
+
+	m_pHungerSystem = new CHungerSanityController;
+	m_pCraftSystem = new CraftSystem;
+
+	m_pSpellSystem = new SpellSystem;
 
 	return true;
 }
@@ -1922,6 +1991,9 @@ void CPlayer::Update(SEntityUpdateContext& ctx, int updateSlot)
 	}
 #endif  // !_RELEASE
 
+	UpdateAudioListener( GetEntity()->GetWorldTM() );
+
+	m_pHungerSystem->PostUpdate(frameTime);
 }
 
 void CPlayer::CreateInputClass(bool client)
@@ -4392,7 +4464,7 @@ void CPlayer::PostUpdate(float frameTime)
 	if(!animControlled)
 	{
 		m_pSpellSystem->PostUpdate(frameTime);
-		m_pHungerSystem->PostUpdate(frameTime);
+
 	}
 
 }
@@ -5774,6 +5846,8 @@ void CPlayer::PostSerialize()
 
 		m_lastTimeDamaged.SetValue(0);
 	}
+
+	CreateAudioListener();
 }
 
 void SPlayerStats::Serialize(TSerialize ser, EEntityAspects aspects)

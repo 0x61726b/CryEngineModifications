@@ -216,7 +216,7 @@ void CCampfire::Update( SEntityUpdateContext& ctx, int updateSlot )
 			newSanity += 6;
 
 			CHungerSanityController::Get()->SetSanity(newSanity);
-			ArkenUIController::Get()->SetManaOrb(newSanity);
+			g_pGame->GetUI()->GetArkenUI()->SetManaOrb(newSanity);
 
 			CryLog("Regenareted player's Sanity from %f to %f",(float)oldSanity,(float)newSanity);
 

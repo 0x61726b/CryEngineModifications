@@ -90,6 +90,8 @@ public:
 	void UpdateUI();
 
 	bool MakeItem1();
+	bool MakeItem2();
+	bool MakeItem3();
 
 	void Craft(const string&);
 

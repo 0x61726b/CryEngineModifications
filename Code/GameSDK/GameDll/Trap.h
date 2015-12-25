@@ -56,7 +56,6 @@ class CTrap : public CGameObjectExtensionHelper<CTrap, IGameObjectExtension>
 	enum ECraftableItemSounds
 	{
 		eSID_SwitchOn,
-		eSID_SwitchOff,
 		eSID_Max
 	};
 public:
@@ -106,6 +105,8 @@ private:
 
 	IEntity* m_pLinkedEntity;
 	IEntityTriggerProxy* m_TriggerEntity;
+
+	bool m_bDisabled;
 };
 
 #endif

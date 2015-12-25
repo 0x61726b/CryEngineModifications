@@ -93,6 +93,8 @@ public:
 
 	void OnSanityChanged();
 	void OnHungerChanged();
+	void OnAwake() {}
+	void OnStartSleeping() {}
 
 	void OnHardwareMouseEvent(int iX,int iY,EHARDWAREMOUSEEVENT eHardwareMouseEvent, int wheelDelta = 0);
 

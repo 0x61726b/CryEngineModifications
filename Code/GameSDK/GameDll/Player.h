@@ -122,9 +122,9 @@ struct SHungerSanity
 	SHungerSanity()
 		: Hunger(75),
 		Sanity(50)
-		{
+	{
 
-		}
+	}
 };
 struct SSpectatorInfo
 {
@@ -466,7 +466,7 @@ enum ELadderLeaveLocation
 };
 
 class CPlayer :
-	public CActor, public IPlayerProfileListener
+	public CActor, public IPlayerProfileListener,public IEntityEventListener
 {
 	friend class CPlayerStateMovement;
 	friend class CPlayerStateAIMovement;
@@ -487,7 +487,6 @@ class CPlayer :
 	friend class CIsometricInput;
 	friend class CAIInput;
 	friend class CNetPlayerInput;
-	friend class ArkenUIController;
 
 	//ergh. Better way of doing this?
 	friend class CLocalPlayerComponent;
@@ -771,7 +770,7 @@ public:
 
 
 	//arkenthera
-	
+	void OnEntityEvent( IEntity *pEntity,SEntityEvent &event );
 
 protected:
 	// CanFire helpers
@@ -1499,6 +1498,8 @@ protected:
 
 	CSprintStamina *m_pSprintStamina;
 
+
+
 	Matrix34 m_clientViewMatrix;
 
 	Vec3		m_eyeOffset;	// View system - used to interpolate to goal eye offset
@@ -1572,11 +1573,15 @@ protected:
 	//arkenthera
 	CraftSystem* m_pCraftSystem;
 	SpellSystem* m_pSpellSystem;
-	ArkenUIController* m_pArkenUI;
+private:
 	CHungerSanityController* m_pHungerSystem;
-	
+
 	float hungerUpdateInterval;
-	
+
+	IEntity* m_pAudioListener;
+
+	void CreateAudioListener();
+	void UpdateAudioListener(Matrix34 const&);
 public:
 
 	CraftSystem* GetCraftSystem();

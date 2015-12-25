@@ -35,8 +35,7 @@ public:
 	ArkenUIController();
 	~ArkenUIController();
 
-	//Get singleton instance
-	static ArkenUIController* Get();
+	void Init();
 
 
 	void BerryText(int);
@@ -61,6 +60,7 @@ public:
 
 	void HideAll();
 	void ShowAll();
+	void ShowOnlyOverlay();
 	
 	
 	
@@ -71,6 +71,9 @@ public:
 	IUIElement* m_pArkenUI;
 	IUIElement* m_pSkillbar;
 	IUIElement* m_pCraftMenu;
+	IUIElement* m_pDeath;
+	IUIElement* m_pSleeping;
+	
 	bool obj2;
 
 };

@@ -124,7 +124,7 @@ void BuildFireCamp::OnPress()
 {
 	if(CHungerSanityController::Get()->GetSanity() < FIRECAMP_REQUIRED_SANITY)
 	{
-		ArkenUIController::Get()->ShowNotEnough(true);
+		g_pGame->GetUI()->GetArkenUI()->ShowNotEnough(true);
 		return;
 	}
 
@@ -170,7 +170,7 @@ bool BuildFireCamp::OnSpellActivate()
 		}
 		currentSanity -= FIRECAMP_REQUIRED_SANITY;
 		CHungerSanityController::Get()->SetSanity( currentSanity );
-		ArkenUIController::Get()->SetManaOrb(currentSanity);
+		g_pGame->GetUI()->GetArkenUI()->SetManaOrb(currentSanity);
 
 		return true;
 	}
@@ -232,12 +232,13 @@ void SpellSystem::OnSanityChanged()
 {
 	int currentSanity = CHungerSanityController::Get()->GetSanity();
 
+	CPlayer* pPlayer =  static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
 	if( currentSanity < FIRECAMP_REQUIRED_SANITY)
 	{
-		ArkenUIController::Get()->EnableSkillOne(false);
+		
 	}
 	else
 	{
-		ArkenUIController::Get()->EnableSkillOne(true);
+		
 	}
 }

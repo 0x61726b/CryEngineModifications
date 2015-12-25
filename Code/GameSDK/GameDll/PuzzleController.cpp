@@ -51,12 +51,12 @@ CPuzzleController::CPuzzleController()
 	m_C2(false),
 	m_C3(false)
 {
-
+	
 }
 //---------------------------------------------------------------------
 CPuzzleController::~CPuzzleController()
 {
-
+	
 }
 //---------------------------------------------------------------------
 bool CPuzzleController::Init( IGameObject * pGameObject )
@@ -80,38 +80,29 @@ void CPuzzleController::ProcessEvent( SEntityEvent &event)
 	if(event.event == ENTITY_EVENT_LINK)
 	{
 
-		IEntityLink* link = GetEntity()->GetEntityLinks();
+		IEntityLink* link = (IEntityLink*)event.nParam[0];
 
 		if(link != NULL)
 		{
-			m_vLinks.insert( std::make_pair( link->name,link->entityId ) );
-			IEntityLink* next = link->next;
-			while(next!= NULL)
-			{
-				m_vLinks.insert( std::make_pair( next->name,next->entityId ) );
+			m_vLinks.insert( std::make_pair( link->name,gEnv->pEntitySystem->GetEntity(link->entityId)) );
 
-				if(next->next == NULL)
-					break;
-				else
-					next = next->next;
-			}
 		}
 
 		if(m_vLinks.size() == 4)
 		{
 			IEntity* trigger = NULL;
-			for(std::map<string,EntityId>::iterator It = m_vLinks.begin(); It != m_vLinks.end(); ++It)
+			for(std::map<string,IEntity*>::iterator It = m_vLinks.begin(); It != m_vLinks.end(); ++It)
 			{
 				SEntityEvent evt1;
 				evt1.event = ENTITY_EVENT_CUSTOM_SETOWNER;
 				evt1.nParam[0] = (INT_PTR)this->GetEntity();
 
-				IEntity* pEntity = gEnv->pEntitySystem->GetEntity( It->second );
+				IEntity* pEntity = It->second;
 				if(pEntity != NULL && It->first != "Trigger")
 					pEntity->SendEvent(evt1);
 
 				if(It->first == "Trigger")
-					trigger = gEnv->pEntitySystem->GetEntity( It->second );
+					trigger = It->second;
 			}
 
 
@@ -122,6 +113,17 @@ void CPuzzleController::ProcessEvent( SEntityEvent &event)
 
 				proxy->ForwardEventsTo( this->GetEntityId() );
 			}
+			else
+			{
+				IEntity* t = gEnv->pEntitySystem->FindEntityByName("ProximityTrigger1");
+
+				if(t)
+				{
+					IEntityTriggerProxy* proxy = (IEntityTriggerProxy*)t->GetProxy(ENTITY_PROXY_TRIGGER);		
+
+					if(proxy) proxy->ForwardEventsTo( this->GetEntityId() );
+				}
+			}
 		}
 
 	}
@@ -131,15 +133,15 @@ void CPuzzleController::ProcessEvent( SEntityEvent &event)
 		INT_PTR bStatus = event.nParam[1];
 
 		int index = 0;
-		for(std::map<string,EntityId>::iterator It = m_vLinks.begin(); It != m_vLinks.end(); ++It)
+		for(std::map<string,IEntity*>::iterator It = m_vLinks.begin(); It != m_vLinks.end(); ++It)
 		{
-			if(It->second == sender)
+			if(It->second == gEnv->pEntitySystem->GetEntity(sender))
 			{
-				StateMap::iterator it = m_States.find(It->second);
+				StateMap::iterator it = m_States.find(It->second->GetId());
 				if(it == m_States.end())
 				{
-					m_States.insert( StateMap::value_type(It->second,bStatus == 0 ? false : true));
-					m_Orders.push_back( It->second);
+					m_States.insert( StateMap::value_type(It->second->GetId(),bStatus == 0 ? false : true));
+					m_Orders.push_back( It->second->GetId() );
 				}
 				else
 				{
@@ -148,7 +150,7 @@ void CPuzzleController::ProcessEvent( SEntityEvent &event)
 						int iAt = -1;
 						for( int i=0; i < m_Orders.size(); ++i )
 						{
-							if(m_Orders[i] == It->second)
+							if(m_Orders[i] == It->second->GetId())
 								iAt = i;
 						}
 
@@ -201,6 +203,15 @@ void CPuzzleController::ProcessEvent( SEntityEvent &event)
 	if(event.event == ENTITY_EVENT_START_GAME)
 	{
 		ResetOrder();
+
+		IEntity* t = gEnv->pEntitySystem->FindEntityByName("ProximityTrigger1");
+
+		if(t)
+		{
+			IEntityTriggerProxy* proxy = (IEntityTriggerProxy*)t->GetProxy(ENTITY_PROXY_TRIGGER);		
+
+			if(proxy) proxy->ForwardEventsTo( this->GetEntityId() );
+		}
 	}
 	if(event.event == ENTITY_EVENT_ENTERAREA)
 	{
@@ -243,10 +254,10 @@ void CPuzzleController::ProcessEvent( SEntityEvent &event)
 
 				SEntityEvent se;
 				se.event = ENTITY_EVENT_CUSTOM_TURNOFFLIGHTS;
-				
-				gEnv->pEntitySystem->GetEntity( It->second )->SendEvent( se );
-				gEnv->pEntitySystem->GetEntity( (++It)->second )->SendEvent( se );
-				gEnv->pEntitySystem->GetEntity( (++It)->second )->SendEvent( se );
+
+				It->second->SendEvent( se );
+				((++It)->second )->SendEvent( se );
+				( (++It)->second )->SendEvent( se );
 			}
 		}
 	}
@@ -256,11 +267,11 @@ void CPuzzleController::OnMovieEvent(IMovieListener::EMovieEvent event, IAnimSeq
 {
 	if (event == IMovieListener::eMovieEvent_Started)
 	{
-		ArkenUIController::Get()->HideAll();
+		g_pGame->GetUI()->GetArkenUI()->HideAll();
 	}
 	if(event == IMovieListener::eMovieEvent_Stopped)
 	{
-		ArkenUIController::Get()->ShowAll();
+		g_pGame->GetUI()->GetArkenUI()->ShowAll();
 
 		gEnv->pMovieSystem->RemoveMovieListener(pSequence,this);
 	}

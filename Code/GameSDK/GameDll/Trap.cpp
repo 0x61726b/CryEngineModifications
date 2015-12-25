@@ -47,7 +47,8 @@ void CTrap::SProperties::InitFromScript(const IEntity& entity)
 }
 //---------------------------------------------------------------------
 CTrap::CTrap()
-	: m_TriggerEntity(NULL)
+	: m_TriggerEntity(NULL),
+	m_bDisabled(false)
 {
 
 }
@@ -87,7 +88,7 @@ void CTrap::Spawn()
 
 	//Create audio proxy
 	IAudioSystem* pAudioSystem = gEnv->pAudioSystem;
-	TAudioControlID id = pAudioSystem->GetAudioTriggerID(m_ScriptsProps.m_AudioTrigger,m_audioControlIDs[eSID_SwitchOff]);
+	TAudioControlID id = pAudioSystem->GetAudioTriggerID(m_ScriptsProps.m_AudioTrigger,m_audioControlIDs[eSID_SwitchOn]);
 
 	IEntityProxy* pProxy = pEntity->GetProxy(ENTITY_PROXY_AUDIO);
 	if (!pProxy)
@@ -134,7 +135,7 @@ void CTrap::ProcessEvent( SEntityEvent &event)
 	{
 	case ENTITY_EVENT_LINK:
 		{
-			IEntityLink* link = GetEntity()->GetEntityLinks();
+			IEntityLink* link = (IEntityLink*)event.nParam[0];
 
 			if( link != NULL)
 			{
@@ -152,54 +153,73 @@ void CTrap::ProcessEvent( SEntityEvent &event)
 			EntityId triggerId = (EntityId)event.nParam[2];
 			IEntity* pTargetEntity = gEnv->pEntitySystem->GetEntity(triggerId);
 
-			if(pTargetEntity->GetProxy(ENTITY_PROXY_TRIGGER) != m_TriggerEntity)
-			{
-				//Boulder hit the player
-
-				IEntityTriggerProxy* boulderTrigger = (IEntityTriggerProxy*)pTargetEntity->GetProxy(ENTITY_PROXY_TRIGGER);
-				boulderTrigger->ForwardEventsTo( triggerId );
-				
-				CHungerSanityController::Get()->SetHunger(-10);
-				return;
-			}
 			if(pActor == pPlayerAc)
 			{
+
+				if(pTargetEntity->GetProxy(ENTITY_PROXY_TRIGGER) != m_TriggerEntity)
+				{
+					//Boulder hit the player
+					if(pEntity->GetPhysics())
+					{
+						if(pEntity->GetPhysics()->GetType() == PE_RIGID)
+						{
+							CryLog("Rigid hype");
+							return;
+						}
+					}
+
+					IEntityTriggerProxy* boulderTrigger = (IEntityTriggerProxy*)pTargetEntity->GetProxy(ENTITY_PROXY_TRIGGER);
+					boulderTrigger->ForwardEventsTo( triggerId );
+
+					CHungerSanityController::Get()->SetHunger(-10);
+					return;
+				}
 				if(m_pLinkedEntity)
 				{
-					CryLog("%s:Triggering %s",GetEntity()->GetName(),m_pLinkedEntity->GetName());
+					
 
-					IEntityPhysicalProxy *pPhysicsProxy = (IEntityPhysicalProxy*)m_pLinkedEntity->GetProxy(ENTITY_PROXY_PHYSICS);
 
-					if(pPhysicsProxy)
+					if(!m_bDisabled)
 					{
-						m_pLinkedEntity->Activate(true);
-						m_pLinkedEntity->Hide(false);
+						IEntityPhysicalProxy *pPhysicsProxy = (IEntityPhysicalProxy*)m_pLinkedEntity->GetProxy(ENTITY_PROXY_PHYSICS);
 
-						m_pLinkedEntity->CreateProxy(ENTITY_PROXY_TRIGGER);
-						IEntityTriggerProxy* pTriggerProxy = (IEntityTriggerProxy*)m_pLinkedEntity->GetProxy(ENTITY_PROXY_TRIGGER);
-
-						if(pTriggerProxy)
+						if(pPhysicsProxy)
 						{
-							AABB aabb(1);
-							pTriggerProxy->SetTriggerBounds(aabb);
+							m_pLinkedEntity->Activate(true);
+							m_pLinkedEntity->Hide(false);
+
+							m_pLinkedEntity->CreateProxy(ENTITY_PROXY_TRIGGER);
+							IEntityTriggerProxy* pTriggerProxy = (IEntityTriggerProxy*)m_pLinkedEntity->GetProxy(ENTITY_PROXY_TRIGGER);
+
+							if(pTriggerProxy)
+							{
+								AABB aabb(2);
+								pTriggerProxy->SetTriggerBounds(aabb);
+							}
+
+							pTriggerProxy->ForwardEventsTo( GetEntity()->GetId() );
+
+							AABB bbox;
+							pPhysicsProxy->GetWorldBounds(bbox);
+
+							Vec3 entityPos = m_pLinkedEntity->GetWorldPos();
+							Vec3 trapPos   = GetEntity()->GetWorldPos();
+
+							Vec3 dir = (entityPos - trapPos).normalized();
+
+
+							IPhysicalEntity* pPhysical = pPhysicsProxy->GetPhysicalEntity();
+
+							CryLog("%s:Triggering %s",GetEntity()->GetName(),m_pLinkedEntity->GetName());
+
+							pPhysicsProxy->AddImpulse(0,bbox.GetCenter(),dir,false,m_ScriptsProps.m_Impulse.x);
+
+							m_pEntityAudioProxy->ExecuteTrigger(m_audioControlIDs[eSID_SwitchOn],eLSM_None,m_pAudioProxyId);
+
+							m_bDisabled = true;
 						}
-
-						pTriggerProxy->ForwardEventsTo( GetEntity()->GetId() );
-
-						AABB bbox;
-						pPhysicsProxy->GetWorldBounds(bbox);
-
-						Vec3 entityPos = m_pLinkedEntity->GetWorldPos();
-						Vec3 trapPos   = GetEntity()->GetWorldPos();
-
-						Vec3 dir = (entityPos - trapPos).GetNormalizedSafe();
-
-						IPhysicalEntity* pPhysical = pPhysicsProxy->GetPhysicalEntity();
-
-
-
-						pPhysicsProxy->AddImpulse(0,bbox.GetCenter(),m_ScriptsProps.m_Impulse,false,1);
 					}
+
 				}
 
 
@@ -265,6 +285,8 @@ bool CTrap::GetEntityPoolSignature( TSerialize signature )
 void CTrap::Reset()
 {
 	m_ScriptsProps.InitFromScript(*GetEntity());
+
+	m_bDisabled = false;
 }
 //---------------------------------------------------------------------//
 void CTrap::FullSerialize( TSerialize ser )

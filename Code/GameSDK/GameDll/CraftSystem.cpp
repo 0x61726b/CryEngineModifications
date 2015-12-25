@@ -59,6 +59,7 @@ void CraftSystem::AddItem(ICraftable* item)
 	copy->SetType(item->GetType());
 
 	m_vInventory.push_back(copy);
+	m_vInventory.push_back(copy);
 
 	for(int i=0; i < m_vListeners.size(); ++i)
 		m_vListeners.at(i)->OnPickup(copy);
@@ -72,8 +73,8 @@ bool CraftSystem::MakeItem1()
 	//First item on the menu
 	//Pie
 	EItemDrops requiredItem1 = EItemDrops::Berry;
-	int		   Quantity1	 = 2;
-	int		   RegensFor	 = 40;
+	int		   Quantity1	 = 1;
+	int		   RegensFor	 = 20;
 
 	int iOk = GetCraftableCount(requiredItem1);
 
@@ -87,17 +88,70 @@ bool CraftSystem::MakeItem1()
 	return iOk == Quantity1;
 }
 
+bool CraftSystem::MakeItem2()
+{
+	//First item on the menu
+	//Pie
+	EItemDrops requiredItem1 = EItemDrops::Banana;
+	int		   Quantity1	 = 1;
+	int		   RegensFor	 = 30;
+
+	int iOk = GetCraftableCount(requiredItem1);
+
+	if(iOk >= Quantity1)
+	{
+		RemoveItems(requiredItem1,Quantity1);
+
+		CHungerSanityController::Get()->SetHunger( CHungerSanityController::Get()->GetHunger() + RegensFor);
+	}
+
+	return iOk == Quantity1;
+}
+
+bool CraftSystem::MakeItem3()
+{
+	//First item on the menu
+	//Pie
+	EItemDrops requiredItem1 = EItemDrops::Banana;
+	EItemDrops requiredItem2 = EItemDrops::Berry;
+
+	int		   Quantity1	 = 1;
+	int		   Quantity2	 = 1;
+
+	int		   RegensFor	 = 45;
+
+	int iOk = GetCraftableCount(requiredItem1);
+	int iOk2 = GetCraftableCount(requiredItem2);
+	if(iOk >= Quantity1 && iOk2 >= Quantity2)
+	{
+		RemoveItems(requiredItem1,Quantity1);
+		RemoveItems(requiredItem2,Quantity2);
+
+		CHungerSanityController::Get()->SetHunger( CHungerSanityController::Get()->GetHunger() + RegensFor);
+	}
+
+	return iOk == Quantity1 && iOk2 == Quantity2;
+}
+
 void CraftSystem::Craft(const string& str)
 {
 	if(strcmp(str,"Pie") == 0)
 	{
-		if(!MakeItem1())
-		{
-			//Display error
-		}
-		else
-		{
 
+		int i = cry_random<int>(0,2);
+
+		if(i == 0)
+		{
+			MakeItem1();
+			
+		}
+		if(i == 1)
+		{
+			MakeItem2();
+		}
+		if(i == 2)
+		{
+			MakeItem3();
 		}
 	}
 }
@@ -155,11 +209,15 @@ void CraftSystem::RemoveItems(EItemDrops e,int count)
 
 	std::vector<ICraftable*>::iterator It;
 
+	int c = 0;
 	for(It = m_vInventory.begin();It != m_vInventory.end();)
 	{
+		if(c >= count)
+			break;;
 		if((*It)->GetItemDropType() == e)
 		{
 			It = m_vInventory.erase(It);
+			c++;
 		}
 		else
 		{
@@ -205,13 +263,14 @@ void CraftSystem::UpdateUI()
 			int qPomegranate = GetCraftableCount(EItemDrops::Pomegranate);
 			int qWatermelon = GetCraftableCount(EItemDrops::Watermelon);
 
-			ArkenUIController* pArkenUICtrl = ArkenUIController::Get();
-			pArkenUICtrl->BerryText(qBerry);
-			pArkenUICtrl->BananaText(qBanana);
-			pArkenUICtrl->DragonFruitText(qDragonFruit);
-			pArkenUICtrl->DurianText(qDurian);
-			pArkenUICtrl->PomegranateText(qPomegranate);
-			pArkenUICtrl->WatermelonText(qWatermelon);
+			CPlayer* pPlayer = static_cast<CPlayer*>(gEnv->pGame->GetIGameFramework()->GetClientActor());
+			ArkenUIController* pArkenUI = g_pGame->GetUI()->GetArkenUI();
+			pArkenUI->BerryText(qBerry);
+			pArkenUI->BananaText(qBanana);
+			pArkenUI->DragonFruitText(qDragonFruit);
+			pArkenUI->DurianText(qDurian);
+			pArkenUI->PomegranateText(qPomegranate);
+			pArkenUI->WatermelonText(qWatermelon);
 		}
 	}
 }
