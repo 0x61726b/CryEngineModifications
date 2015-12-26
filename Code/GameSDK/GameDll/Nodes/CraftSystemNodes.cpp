@@ -29,7 +29,6 @@ History:
 #include "Nodes/G2FlowBaseNode.h"
 #include "Player.h"
 #include "CraftSystem.h"
-
 //--------------------------------------------------------------------
 
 class CFlowNode_CraftSystemInventory : public CFlowBaseNode<eNCT_Instanced>
@@ -719,6 +718,159 @@ public:
 
 	SActivationInfo m_actInfo;
 };
+
+class CFlowNode_RopeBoulderCollision : public CFlowBaseNode<eNCT_Instanced>
+{
+	enum EInputPorts
+	{
+
+		eINP_Enable = 0,
+		eINP_Disable,
+		eINP_Boulder ,
+
+	};
+
+	enum EOutputPorts
+	{
+
+	};
+
+public:
+	CFlowNode_RopeBoulderCollision( SActivationInfo * pActInfo )
+	{
+
+	}
+
+	virtual void GetMemoryUsage(ICrySizer * s) const
+	{
+		s->Add(*this);
+	}
+
+	CFlowNode_RopeBoulderCollision::~CFlowNode_RopeBoulderCollision() 
+	{
+		for(auto iter=g_listeners.begin(); iter!=g_listeners.end(); )
+			if (iter->second->pNode==this)
+			{
+				delete iter->second;
+				g_listeners.erase(iter++);
+			}
+			else iter++;
+	}
+
+
+	virtual void GetConfiguration( SFlowNodeConfig &config )
+	{
+		static const SInputPortConfig inp_config[] = {
+			InputPortConfig_Void ("Enable", _HELP("")),
+			InputPortConfig_Void ("Disable", _HELP("")),
+			InputPortConfig<EntityId> ("Boulder", _HELP("")),
+			{0}
+		};
+		static const SOutputPortConfig out_config[] = {
+			{0}
+		};
+
+		config.sDescription = _HELP( "" );
+		config.pInputPorts = inp_config;
+		config.pOutputPorts = out_config;
+		config.SetCategory(EFLN_APPROVED);
+	}
+
+	virtual IFlowNodePtr Clone(SActivationInfo* pActInfo) { return new CFlowNode_RopeBoulderCollision(pActInfo); }
+
+
+	virtual void ProcessEvent( EFlowEvent event, SActivationInfo *pActInfo )
+	{
+		switch (event)
+		{
+		case eFE_Initialize:
+			{
+				m_actInfo = *pActInfo;
+				break;
+			}
+		case eFE_Activate:
+			{
+				IEntity* pent;
+				if (IsPortActive( pActInfo, eINP_Enable ))
+				{
+					SCollListener cl;
+					cl.id = GetPortEntityId(pActInfo, eINP_Boulder);
+					cl.pNode = this;
+					if (g_listeners.find(cl.id)==g_listeners.end() && (pent=gEnv->pEntitySystem->GetEntity(cl.id)) && pent->GetPhysics())
+					{
+						if (g_listeners.empty())
+							gEnv->pPhysicalWorld->AddEventClient(EventPhysCollision::id, (int(*)(const EventPhys*))OnCollision, 1);
+
+						g_listeners.insert(std::pair<EntityId,SCollListener*>(cl.id,new SCollListener(cl)));
+					}
+				}
+				if (IsPortActive( pActInfo, eINP_Disable ))
+				{
+					std::map<EntityId,SCollListener*>::iterator iter;
+
+					if((iter=g_listeners.find(GetPortEntityId(pActInfo,eINP_Boulder)))!=g_listeners.end())
+					{
+						delete iter->second;
+						g_listeners.erase(iter);
+						if (g_listeners.empty())
+							gEnv->pPhysicalWorld->RemoveEventClient(EventPhysCollision::id, (int(*)(const EventPhys*))OnCollision, 1);
+					}
+
+				}
+				break;
+			}
+		}
+	}
+	static int OnCollision(const EventPhysCollision *pColl)
+	{
+		IEntity *pTarget0 = pColl->iForeignData[0]==PHYS_FOREIGN_ID_ENTITY ? (IEntity*)pColl->pForeignData[0]:nullptr;
+		IEntity *pTarget1 = pColl->iForeignData[1]==PHYS_FOREIGN_ID_ENTITY ? (IEntity*)pColl->pForeignData[1]:nullptr;
+
+		if(pTarget0 && pTarget1)
+		{
+			if(pTarget0->GetId() == g_pGame->GetIGameFramework()->GetClientActorId())
+			{
+				std::map<EntityId,SCollListener*>::iterator iter = g_listeners.find( pTarget1->GetId() );
+
+				if(iter != g_listeners.end())
+				{
+					CryLog("Entity0: %i, Entity1: %i", pTarget0->GetId(),pTarget1->GetId());
+					CHungerSanityController::Get()->SetHunger(-10);
+
+					CActor* pLocalActor = static_cast<CActor*>(g_pGame->GetIGameFramework()->GetClientActor());
+					if (pLocalActor)
+					{
+						const float backwardsImpulse = 1;
+						pLocalActor->KnockDown(backwardsImpulse);
+
+						
+					}
+
+					delete iter->second;
+					g_listeners.erase(iter);
+					if (g_listeners.empty())
+						gEnv->pPhysicalWorld->RemoveEventClient(EventPhysCollision::id, (int(*)(const EventPhys*))OnCollision, 1);
+
+					
+				}
+			}
+
+		}
+
+		return 1;
+	}
+
+
+	struct SCollListener {
+		EntityId id;
+		CFlowNode_RopeBoulderCollision *pNode;
+	};
+	static std::map<EntityId,SCollListener*> g_listeners;
+	SActivationInfo m_actInfo;
+};
+
+std::map<EntityId,CFlowNode_RopeBoulderCollision::SCollListener*> CFlowNode_RopeBoulderCollision::g_listeners;
+
 REGISTER_FLOW_NODE( "Crafting:Inventory", CFlowNode_CraftSystemInventory );
 REGISTER_FLOW_NODE( "Crafting:Pickup", CFlowNode_CraftSystemPickup );
 REGISTER_FLOW_NODE( "HungerSystem:HungerEvents", CFlowNode_HungerEvents );
@@ -726,4 +878,5 @@ REGISTER_FLOW_NODE( "Arken:SetThirdPerson", CFlowNode_SetThirdPerson );
 REGISTER_FLOW_NODE( "Arken:KillPlayer", CFlowNode_KillPlayer );
 REGISTER_FLOW_NODE( "Arken:SetHungerSanity", CFlowNode_SetHungerSanity);
 REGISTER_FLOW_NODE( "Arken:ArkenUIHelper", CFlowNode_ArkenUIHelper);
+REGISTER_FLOW_NODE( "Arken:RopeBoulderCollision", CFlowNode_RopeBoulderCollision);
 //--------------------------------------------------------------------

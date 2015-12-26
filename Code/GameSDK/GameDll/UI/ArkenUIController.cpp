@@ -103,6 +103,10 @@ void ArkenUIController::ShowOnlyOverlay()
 	m_pSkillbar->SetVisible(true);
 
 	m_pCraftMenu->SetVisible(true);
+
+	m_pDeath->SetVisible(false);
+
+	m_pSleeping->SetVisible(false);
 }
 void ArkenUIController::BerryText(int v)
 {

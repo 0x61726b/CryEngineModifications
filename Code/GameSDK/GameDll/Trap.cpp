@@ -143,6 +143,17 @@ void CTrap::ProcessEvent( SEntityEvent &event)
 			}
 			break;
 		}
+	case ENTITY_EVENT_START_GAME:
+		{
+			IEntityLink* link = GetEntity()->GetEntityLinks();
+
+			if( link != NULL)
+			{
+				m_pLinkedEntity = gEnv->pEntitySystem->GetEntity( link->entityId );
+			}
+			break;
+		}
+
 	case ENTITY_EVENT_ENTERAREA:
 		{
 			IEntity * pEntity = gEnv->pEntitySystem->GetEntity((EntityId)event.nParam[0]);
@@ -176,7 +187,7 @@ void CTrap::ProcessEvent( SEntityEvent &event)
 				}
 				if(m_pLinkedEntity)
 				{
-					
+
 
 
 					if(!m_bDisabled)
