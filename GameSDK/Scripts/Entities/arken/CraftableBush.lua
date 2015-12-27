@@ -9,7 +9,9 @@ Craftable =
 		audioTriggerPlayTrigger = "Play_c_player_fol_bag_movement",
 		iDrops = -1,
 		iType = -1,
-		iHealthBonus = 0
+		iHealthBonus = 0,
+		particle_Fx = "ArkenParticles.FX.ItemHighlight",
+		vParticleRot = { x= 90,y=90,z=90}
 	},
 	Editor = 
 	{
