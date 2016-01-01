@@ -350,7 +350,8 @@ void CPuzzleFire::SwitchLights(bool b)
 		evt.nParam[1] =(INT_PTR)true;
 		if(m_pPuzzleController)m_pPuzzleController->SendEvent( evt );
 	}
-	//CHungerSanityController::Get()->SetSanity( CHungerSanityController::Get()->GetSanity() - 10 );
+	CHungerSanityController::Get()->SetSanity( CHungerSanityController::Get()->GetSanity() - 4 );
+	m_ScriptsProps.m_bActive = b;
 }
 //--------------------------------------------------------------------
 void CPuzzleFire::Update( SEntityUpdateContext& ctx, int updateSlot )

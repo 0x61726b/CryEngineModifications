@@ -20,45 +20,39 @@ Description: Procedural Collectible Generation
 
 -------------------------------------------------------------------------
 History:
-- 18.12.2015 - Created
+- 3.12.2015 - Created
 
 *************************************************************************/
-#ifndef __PuzzleController_h__
-#define __PuzzleController_h__
-//------------------------------------------------------------------------
-#include <IGameObject.h>
-#include <IMovieSystem.h>
-//------------------------------------------------------------------------
 
-class CPuzzleControllerEventListener
+#ifndef __BoulderRotater_h__
+#define __BoulderRotater_h__
+#pragma once
+//----------------------------------------------------------------------------
+#include <IGameObject.h>
+//----------------------------------------------------------------------------
+
+
+class CBoulderRotater : public CGameObjectExtensionHelper<CBoulderRotater, IGameObjectExtension>
 {
-public:
-	virtual void TriggerOn() = 0;
-	virtual void TriggerOff() = 0;
-};
-class CPuzzleController : public CGameObjectExtensionHelper<CPuzzleController, IGameObjectExtension>,public IMovieListener
-{
+
 	struct SProperties
 	{
-		SProperties()
-			: m_CorrectOrder(""),
-			m_AnimSeq(""),
-			m_TriggerName(""),
-			Preset(0)
+		SProperties() :
+			m_AutoTurn(false),
+			m_fRotateInterval(0.0f),
+			m_fRotateFor(0.0f)
 		{
 
 		}
 		void InitFromScript( const IEntity& entity );
 
-		char* m_CorrectOrder;
-		char* m_AnimSeq;
-		char* m_TriggerName;
-
-		int Preset;
+		bool m_AutoTurn;
+		float m_fRotateInterval;
+		float m_fRotateFor;	
 	};
 public:
-	CPuzzleController();
-	virtual ~CPuzzleController();
+	CBoulderRotater();
+	virtual ~CBoulderRotater();
 
 	//IGameObjectExtension
 	virtual bool Init( IGameObject * pGameObject );
@@ -77,7 +71,7 @@ public:
 	virtual void Update( SEntityUpdateContext& ctx, int );
 	virtual void PostUpdate(float frameTime ) {};
 	virtual void PostRemoteSpawn() {};
-	virtual void HandleEvent( const SGameObjectEvent& );
+	virtual void HandleEvent( const SGameObjectEvent& ) {};
 	virtual void ProcessEvent( SEntityEvent& );
 	virtual void SetChannelId(uint16 id) {};
 	virtual void SetAuthority( bool auth ) {};
@@ -87,35 +81,29 @@ public:
 		s->AddObject(this, sizeof(*this));
 	}
 
-	void OnMovieEvent(IMovieListener::EMovieEvent event, IAnimSequence* pSequence); 
-
-	std::vector<CPuzzleControllerEventListener*> m_vListeners;
-	void AddListener(CPuzzleControllerEventListener*);
-	void RemoveListener(CPuzzleControllerEventListener*);
-protected:
-	SProperties m_ScriptsProps;
+private:
 
 	void Reset();
-	void ResetOrder();
 
-	typedef std::map<EntityId,bool> StateMap;
-	StateMap m_States;
+	SProperties script;
 
-	typedef std::vector<EntityId> OrderMap;
-	OrderMap m_Orders;
+	IEntity*	m_pRotater;
+	IEntity*	m_pTrigger;
 
-	typedef std::map<string,IEntity*> LinkEntityMap;
-	LinkEntityMap m_vLinks;
+	void AutoRotate();
 
-	bool m_bPlayedCutscene;
+	float m_fTurnInterval;
+	float m_fTimer;
+	float m_fRotatedAngle;
+	typedef std::map<string,IEntity*> LinkMap;
+	LinkMap m_LinkMap;
 
-	bool m_C1;
-	bool m_C2;
-	bool m_C3;
+	bool m_bTriggered;
 
+	bool m_bAutoTurn;
 };
 
 
 
-#endif
-
+//----------------------------------------------------------------------------
+#endif //~__ProceduralCollectibleSystem_h__

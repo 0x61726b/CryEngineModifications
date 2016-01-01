@@ -6,7 +6,8 @@ PuzzleController =
 	{
 		CorrectOrder = "132",
 		AnimSeq = "",
-		TriggerName = ""
+		TriggerName = "",
+		Preset = -1
 	},
 	Editor = 
 	{
